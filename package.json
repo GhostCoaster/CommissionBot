@@ -4,8 +4,12 @@
   "description": "Commission your friends to totally bean them",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "run": "tsc commission_bot.ts --outDir ./build/ && node build/commission_bot.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^14.0.26",
+    "discord.js": "^12.2.0"
+  }
 }
