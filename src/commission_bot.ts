@@ -3,23 +3,30 @@ import * as Discord from 'discord.js'
 import * as Login from './login'
 import * as Commmand from './command'
 import * as CommissionsList from './commissionsList'
+import * as RoleManager from './roleManager'
 import { Commissions } from './commissions'
+import { brotliCompressSync } from 'zlib';
 
 const bot = new Discord.Client();
 const activeCommissions = Array<Commissions>();
 
 bot.on('ready', () => {
-	console.log('commissions bot online')
+	console.log('commissions bot online');
+	
+	/* setup roles in all guilds */
+	bot.guilds.cache.forEach(guild => {
+		RoleManager.init(guild);
+	});
 });
 
 Commmand.addCommand('start', message => {
 	let errMessage = CommissionsList.addCommissions(message.author, message.channel);
-	if (errMessage) message.channel.send(errMessage)
+	if (errMessage) message.channel.send(errMessage);
 });
 
 Commmand.addCommand('stop', message => {
 	let errMessage = CommissionsList.removeCommissions(message.channel);
-	if (errMessage) message.channel.send(errMessage)
+	if (errMessage) message.channel.send(errMessage);
 });
 
 bot.on('message', message => {

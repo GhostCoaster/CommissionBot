@@ -3,6 +3,7 @@ import * as Discord from 'discord.js'
 import { Round } from './round/round'
 import { rounds, RoundIndex, createRound } from './round/rounds'
 import { JoinRound } from './round/joinRound';
+import * as RoleManager from './roleManager'
 
 /**
  * represents a game of commissions happening
@@ -35,5 +36,30 @@ export class Commissions {
 
 	stop() {
 		this.currentRound.onEnd();
+	}
+
+	playerJoin(user: Discord.User) {
+		this.players.push(user);
+
+		/* get member from user */
+		this.guild.members.fetch({ user: user }).then(member => {
+			member.roles.add(RoleManager.getRole());
+		}).catch(() => {
+			console.log('could not find user in guild??');
+		});
+	}
+
+	playerLeave(user: Discord.User) {
+		let index = this.players.indexOf(user);
+		if (index === -1) return;
+
+		this.players.splice(index, 1);
+
+		/* get member from user */
+		this.guild.members.fetch({ user: user }).then(member => {
+			member.roles.remove(RoleManager.getRole());
+		}).catch(() => {
+			console.log('could not find user in guild??');
+		});
 	}
 }

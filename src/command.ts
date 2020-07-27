@@ -1,11 +1,11 @@
 import * as Discord from 'discord.js'
 import { Duplex } from 'stream';
 
-interface OnMessage {
+export interface OnMessage {
 	(message: Discord.Message): void;
 };
 
-interface OnReact {
+export interface OnReact {
 	(reaction: Discord.MessageReaction, user: Discord.User): void;
 };
 
