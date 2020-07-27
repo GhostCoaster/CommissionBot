@@ -25,12 +25,26 @@ let commands = Array<CommandPair>();
 let reactAdds = Array<ReactPair>();
 let reactRemoves = Array<ReactPair>();
 
-export let addAnyCommand = (onMessage: OnMessage) => {
-	commands.push({keyword: '', onMessage})
+/* util */
+let removeFromArray = <T>(array: Array<T>, find: (member: T) => boolean) => {
+	let removeIndex = array.findIndex(find);
+	if (removeIndex === -1) return;
+
+	array.splice(removeIndex, 1);
 }
 
 export let addCommand = (keyword: string, onMessage: OnMessage) => {
 	commands.push({keyword, onMessage})
+}
+export let addAnyCommand = (onMessage: OnMessage) => {
+	addCommand('', onMessage);
+}
+
+export let removeCommand = (keyword: string) => {
+	removeFromArray(commands, command => command.keyword === keyword);
+}
+export let removeAnyCommand = () => {
+	removeCommand('')
 }
 
 export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
@@ -56,23 +70,15 @@ export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
 export let addReactAdd = (message: Discord.Message, onAdd: OnReact) => {
 	reactAdds.push({message: message, onReact: onAdd});
 }
-
 export let removeReactAdd = (message: Discord.Message) => {
-	let removeIndex = reactAdds.findIndex(reactAdd => reactAdd.message === message);
-	if (removeIndex === -1) return;
-
-	reactAdds.splice(removeIndex, 1);
+	removeFromArray(reactAdds, reactAdd => reactAdd.message === message);
 }
 
 export let addReactRemove = (message: Discord.Message, onRemove: OnReact) => {
 	reactRemoves.push({message: message, onReact: onRemove});
 }
-
 export let removeReactRemove = (message: Discord.Message) => {
-	let removeIndex = reactRemoves.findIndex(reactRemove => reactRemove.message === message);
-	if (removeIndex === -1) return;
-
-	reactRemoves.splice(removeIndex, 1);
+	removeFromArray(reactRemoves, reactRemove => reactRemove.message === message);
 }
 
 export let handleReactAdd = (bot: Discord.Client, messageReaction: Discord.MessageReaction, user: Discord.User | Discord.PartialUser) => {
