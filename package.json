@@ -1,15 +1,16 @@
 {
-  "name": "commissions_bot",
-  "version": "1.0.0",
-  "description": "Commission your friends to totally bean them",
-  "main": "index.js",
-  "scripts": {
-    "run": "tsc commission_bot.ts --outDir ./build/ && node build/commission_bot.js"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@types/node": "^14.0.26",
-    "discord.js": "^12.2.0"
-  }
+	"name": "commissions_bot",
+	"version": "1.0.0",
+	"description": "Commission your friends to totally bean them",
+	"main": "build/commission_bot.js",
+	"scripts": {
+		"setup": "mkdir build",
+		"run": "tsc src/commission_bot.ts --outDir ./build && node build/commission_bot.js"
+	},
+	"author": "Gnarwhal, Balduvian",
+	"license": "ISC",
+	"dependencies": {
+		"@types/node": "^14.0.26",
+		"discord.js": "^12.2.0"
+	}
 }

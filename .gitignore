@@ -1,4 +1,4 @@
 token.txt
 /node_modules
 /build
-
+*.js
