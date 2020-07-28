@@ -7,7 +7,7 @@ export let getToken = (filepath = DEFAULT_TOKEN_FILE): Promise<string> => {
 		fs.readFile(filepath, (err, data) => {
 			if (err) return reject();
 
-			accept(data.toString());
+			accept(data.toString().trim());
 		})	
 	})
 }
