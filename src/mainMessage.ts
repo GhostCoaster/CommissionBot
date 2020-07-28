@@ -12,39 +12,18 @@ let createMessage = (bigText: string, smallText: string, channel: Discord.TextCh
 		.attachFiles([attachment])
 		.setThumbnail('attachment://paint.png')
 		.addField(bigText, smallText);
-	
-		console.log(`help ${embed}`);
 
-		channel.send(embed).then(message => {
-			console.log('it worked to send');
-			accept(message);
-		}).catch(reason => {
-			console.log('it did not work to send');
-			console.log(reason);
-			reject(reason);
-		});
-	})
+		channel.send(embed).then(message => accept(message)).catch(reason => reject(reason));
+	});
 }
 
 export let updateMessage = (bigText: string, smallText: string, channel: Discord.TextChannel, message: Discord.Message | undefined = undefined) => {
-	console.log('StArT');
-
 	return new Promise<Discord.Message>((accept, reject) => {
 		if (message) {
-			console.log('messssssssaaa');
-
-			removeReactAdd(message);
-			removeReactRemove(message);
-
-			message.delete();
+			message.delete().catch(() => console.log('msg COULD not DELET!~'));
 		}
 
-		console.log('bout to creat');
-
-		createMessage(bigText, smallText, channel).then(message => accept(message)).catch(reason => {
-			console.log(`vaaaaaaaaaauuus ${reason}`);
-			reject(reason);
-		});
+		createMessage(bigText, smallText, channel).then(message => accept(message)).catch(reason => reject(reason));
 	});
 }
 

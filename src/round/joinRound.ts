@@ -2,7 +2,7 @@ import * as Round from './round'
 import { Commissions } from '../commissions';
 import { RoundType } from './rounds';
 import { updateMessage, setReact } from '../mainMessage';
-import { removeReactAdd, removeReactRemove } from '../command';
+import { removeReactAdd, removeReactRemove, addCommand, removeCommand } from '../command';
 
 export class JoinRound extends Round.Round {
 	onStart(): void {
@@ -23,6 +23,15 @@ export class JoinRound extends Round.Round {
 		}).catch(() => {
 			console.log('something went wrong');
 		});
+
+		addCommand('start', message => {
+			if (!this.commissions.isGameMaster(message.author)) return;
+
+			if (this.commissions.players.length < 2)
+				return void this.commissions.channel.send('Need at least two people to start a commissions!');
+
+			this.commissions.nextRound();
+		});
 	}
 
 	onEnd(): void {
@@ -30,5 +39,7 @@ export class JoinRound extends Round.Round {
 			removeReactAdd(this.commissions.message)
 			removeReactRemove(this.commissions.message)
 		}
+
+		removeCommand('start');
 	}
 }

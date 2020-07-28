@@ -53,18 +53,14 @@ export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
 
 	let text = message.content;
 
-	if (text.startsWith(delimiter)) {
-		let restText = text.slice(1);
+	commands.every(command => {
+		if (command.keyword === '' || text.startsWith(delimiter + command.keyword)) {
+			command.onMessage(message);
+			return false;
+		}
 
-		commands.every(command => {
-			if (command.keyword === '' || restText.startsWith(command.keyword)) {
-				command.onMessage(message);
-				return false;
-			}
-
-			return true;
-		});
-	}
+		return true;
+	});
 }
 
 export let addReactAdd = (message: Discord.Message, onAdd: OnReact) => {

@@ -1,7 +1,10 @@
 
 import { Round } from './round'
 import { Commissions } from '../commissions'
+
 import { JoinRound } from './joinRound'
+import { ReferenceRound } from './referenceRound'
+import { ReadyRound } from './readyRound'
 
 export interface RoundType {
 	id?: number;
@@ -21,8 +24,8 @@ export enum RoundIndex {
 
 export let rounds: RoundType[] = [
 	{create: () => new JoinRound(), next: RoundIndex.REFERENCE},
-	{create: () => new JoinRound(), next: RoundIndex.READY},
-	{create: () => new JoinRound(), next: RoundIndex.DRAW},
+	{create: () => new ReferenceRound(), next: RoundIndex.READY},
+	{create: () => new ReadyRound(), next: RoundIndex.DRAW},
 	{create: () => new JoinRound(), next: RoundIndex.SUBMIT},
 	{create: () => new JoinRound(), next: RoundIndex.VOTE},
 	{create: () => new JoinRound(), next: RoundIndex.FINAL},

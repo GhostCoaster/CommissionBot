@@ -6,6 +6,8 @@ import { JoinRound } from './round/joinRound';
 import * as RoleManager from './roleManager'
 import * as fs from 'fs'
 import * as https from 'https'
+import { cpus } from 'os';
+import { removeCommissions, findCommissions } from './commissionsList';
 
 /**
  * represents a game of commissions happening
@@ -27,7 +29,7 @@ export class Commissions {
 		this.channel = channel;
 		this.guild = channel.guild;
 
-		this.players = [this.gameMaster];
+		this.players = [];
 		this.playerIndex = 0;
 
 		this.currentRound = createRound(this, RoundIndex.JOIN);
@@ -35,12 +37,24 @@ export class Commissions {
 	}
 
 	nextRound() {
+		this.currentRound.onEnd();
+
 		this.currentRound = createRound(this, this.currentRound.roundType.next);
 		this.currentRound.onStart();
 	}
 
 	stop() {
+		/* handle internal resetting */
 		this.currentRound.onEnd();
+
+		/* un-role all players */
+		while (this.players.length > 0) {
+			this.playerLeave(this.players[0]);
+		}
+
+		/* handle global commissions removal */
+		let thisIndex = findCommissions(this.guild);
+		if (thisIndex !== -1) removeCommissions(thisIndex);
 	}
 
 	playerJoin(user: Discord.User) {
@@ -70,7 +84,7 @@ export class Commissions {
 
 	/* UTIL */
 
-	isCurrentPlayer(user: Discord.User): boolean {
+	isCurrentPlayer(user: Discord.User) {
 		return user === this.players[this.playerIndex]
 	}
 
@@ -79,11 +93,11 @@ export class Commissions {
 		this.playerIndex %= this.players.length;
 	}
 
-	attachIsImage(attachment: Discord.MessageAttachment) {
-		var url = attachment.url;
-		return url.indexOf("png", url.length - "png".length /*or 3*/) !== -1;
+	isGameMaster(user: Discord.User) {
+		return user === this.gameMaster;
 	}
 
+	/* unfinished */
 	getAttachmentImage(attachment: Discord.MessageAttachment) {
 		return new Promise<Buffer>((accept, reject) => {
 			const options = {
@@ -106,11 +120,11 @@ export class Commissions {
 		});
 	}
 
+	/* unfinished */
 	saveImage(name: string, data: Buffer) {
 		if (!fs.existsSync('./data')) {
 			fs.mkdirSync('./data');
 		}
-		
 
 		fs.writeFileSync(`./data/${name}`, data);
 	}

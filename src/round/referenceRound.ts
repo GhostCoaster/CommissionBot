@@ -14,22 +14,30 @@ export class ReferenceRound extends Round {
 			if (!this.commissions.isCurrentPlayer(message.author)) return;
 	
 			this.commissions.cycleCurrentPlayer();
-
+			
 			/* if no one wants to send an image */
 			if (this.commissions.playerIndex === this.originalIndex) {
+				this.commissions.channel.send('No one has an image so commissions is ending!');
 				this.commissions.stop();
 			/* or we just need to update the message */
 			} else {
-				this.updateReferenceMessage(this.commissions.players[this.originalIndex]);
+				this.updateReferenceMessage(this.commissions.players[this.commissions.playerIndex]);
 			}
 		});
 
 		addAnyCommand(message => {
+			console.log('here');
 			if (!this.commissions.isCurrentPlayer(message.author)) return;
 
-			message.attachments.forEach(attachment => {
-				attachment.
-			});
+			console.log('now');
+
+			/* could potentially put an actual image check here */
+			if (message.attachments.size === 0) {
+				this.commissions.channel.send('Please attach an image!');
+				return;
+			}
+
+			this.commissions.nextRound();
 		});
 	}
 
@@ -39,13 +47,17 @@ export class ReferenceRound extends Round {
 	}
 
 	updateReferenceMessage(player: User) {
+		console.log('updating reference message...');
+
 		updateMessage(
 			'Selecting image to draw',
 			`<@${player.id}> is selecting`,
 			this.commissions.channel,
 			this.commissions.message
-		).catch(() => {
-			console.log('something went wrong');
+		).then(message => {
+			this.commissions.message = message;
+		}).catch(err => {
+			console.log(`something went wrong ${err}`);
 		});
 	}
 }
