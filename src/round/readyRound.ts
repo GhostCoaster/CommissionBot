@@ -9,6 +9,7 @@ export class ReadyRound extends Round {
 		updateMessage(
 			'Get ready to draw',
 			'React to this message when you\'re ready',
+			undefined,
 			this.commissions.channel,
 			this.commissions.message
 		).then(message => {

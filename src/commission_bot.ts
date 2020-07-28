@@ -33,7 +33,7 @@ Commmand.addCommand('stop', message => {
 	if (message.guild === null) return;
 
 	let index = CommissionsList.findCommissions(message.guild);
-	if (index === -1) return message.channel.send('No commissions going on in this server!');
+	if (index === -1) return void message.channel.send('No commissions going on in this server!');
 
 	/* only the game master can stop it */
 	let commissions = CommissionsList.activeCommissions[index];
@@ -42,6 +42,44 @@ Commmand.addCommand('stop', message => {
 	CommissionsList.activeCommissions[index].stop();
 
 	message.channel.send('Commiss stopped!');
+});
+
+Commmand.addCommand('time', message => {
+	if (message.guild === null) return;
+
+	let index = CommissionsList.findCommissions(message.guild);
+	if (index === -1) return void message.channel.send('No commissions going on in this server!');
+	let commissions = CommissionsList.activeCommissions[index];
+
+	let parts = message.content.split(' ');
+	if (parts.length < 2) return void message.channel.send('Need a parameter');
+
+	let totalTime = 0;
+
+	for (let p = 1; p < parts.length; ++p) {
+		let timePart = parts[p];
+		let lastIndex = 0;
+
+		for (let i = 0; i < timePart.length; ++i) {
+			if (timePart.charAt(i) === 's') {
+				let numberStr = timePart.substr(lastIndex, i - lastIndex);
+				totalTime += +numberStr;
+
+				lastIndex = i + 1;
+			} else if (timePart.charAt(i) === 'm') {
+				let numberStr = timePart.substr(lastIndex, i - lastIndex);
+				totalTime += (+numberStr * 60);
+
+				lastIndex = i + 1;
+			}
+		}
+	}
+
+	if (isNaN(totalTime)) return void message.channel.send('Incorrect number format');
+
+	commissions.drawTime = totalTime;
+
+	message.channel.send(`Commissions draw time set to ${Util.timeString(totalTime)}`);
 });
 
 bot.on('message', message => {

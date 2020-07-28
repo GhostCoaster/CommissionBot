@@ -22,3 +22,9 @@ export let timeString = (time: number) => {
 
 	return `${minutesPart} ${secondsPart}`;
 }
+
+export let generateDescription = (secondsLeft: number) => {
+	let description = `Time left: ${timeString(secondsLeft)}`;
+
+	return `\`\`\`markdown\n${description}\n${'-'.repeat(description.length)}\`\`\``;
+}

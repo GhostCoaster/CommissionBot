@@ -9,6 +9,7 @@ export class JoinRound extends Round.Round {
 		updateMessage(
 			'Commissions about to begin',
 			'react to this message to join',
+			undefined,
 			this.commissions.channel,
 			this.commissions.message
 		).then(message => {

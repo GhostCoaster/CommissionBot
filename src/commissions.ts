@@ -23,6 +23,9 @@ export class Commissions {
 	playerIndex: number;
 
 	currentRound: Round;
+	drawTime: number;
+
+	submittedDrawings: Array<Discord.Message | undefined>;
 
 	constructor(gameMaster: Discord.User, channel: Discord.TextChannel) {
 		this.gameMaster = gameMaster;
@@ -30,7 +33,10 @@ export class Commissions {
 		this.guild = channel.guild;
 
 		this.players = [];
+		this.submittedDrawings = [];
 		this.playerIndex = 0;
+
+		this.drawTime = 5 * 60;
 
 		this.currentRound = createRound(this, RoundIndex.JOIN);
 		this.currentRound.onStart();

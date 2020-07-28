@@ -39,6 +39,9 @@ export class ReferenceRound extends Round {
 
 			this.commissions.nextRound();
 		});
+
+		/* now that we know all the players make the submission array */
+		this.commissions.submittedDrawings = new Array(this.commissions.players.length);
 	}
 
 	onEnd(): void {
@@ -52,6 +55,7 @@ export class ReferenceRound extends Round {
 		updateMessage(
 			'Selecting image to draw',
 			`<@${player.id}> is selecting`,
+			undefined,
 			this.commissions.channel,
 			this.commissions.message
 		).then(message => {

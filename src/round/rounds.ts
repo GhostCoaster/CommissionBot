@@ -7,6 +7,7 @@ import { ReferenceRound } from './referenceRound'
 import { ReadyRound } from './readyRound'
 import { DrawRound } from './drawRound'
 import { SubmitRound } from './submitRound'
+import { VoteRound } from './voteRound'
 
 export interface RoundType {
 	id?: number;
@@ -30,7 +31,7 @@ export let rounds: RoundType[] = [
 	{create: () => new ReadyRound(), next: RoundIndex.DRAW},
 	{create: () => new DrawRound(), next: RoundIndex.SUBMIT},
 	{create: () => new SubmitRound(), next: RoundIndex.VOTE},
-	{create: () => new JoinRound(), next: RoundIndex.FINAL},
+	{create: () => new VoteRound(), next: RoundIndex.FINAL},
 	{create: () => new JoinRound(), next: RoundIndex.REFERENCE}
 ];
 

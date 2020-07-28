@@ -4,26 +4,28 @@ import { updateMessage, editMessage } from '../mainMessage';
 import { Message } from 'discord.js';
 import { Timer } from '../timer';
 import * as Util from '../util';
+import { RoundType } from './rounds';
+import { Commissions } from '../commissions';
 
 export class DrawRound extends Round {
-	timer = new Timer(300, 5, secondsLeft => {
-		/* edit the message every 5 seconds */
-		if (this.commissions.message) {
-			editMessage(
-				'Currently drawing',
-				'Submit after time runs out',
-				this.generateDescription(secondsLeft),
-				this.commissions.message
-			);
-		}
-	}, () => {
-		this.commissions.nextRound();
-	});
+	timer: Timer = undefined as unknown as Timer;
 
-	generateDescription(secondsLeft: number) {
-		let description = `Time left: ${Util.timeString(secondsLeft)}`;
+	construct(roundType: RoundType, commissions: Commissions) {
+		super.construct(roundType, commissions);
 
-		return `\`\`\`markdown\n${description}${'-'.repeat(description.length)}\`\`\``;
+		this.timer = new Timer(this.commissions.drawTime, 5, secondsLeft => {
+			/* edit the message every 5 seconds */
+			if (this.commissions.message) {
+				editMessage(
+					'Currently drawing',
+					'Submit after time runs out',
+					Util.generateDescription(secondsLeft),
+					this.commissions.message
+				);
+			}
+		}, () => {
+			this.commissions.nextRound();
+		});
 	}
 
 	onStart(): void {
@@ -32,7 +34,7 @@ export class DrawRound extends Round {
 		updateMessage(
 			'Currently drawing',
 			'Submit after time runs out',
-			this.generateDescription(description.length),
+			Util.generateDescription(this.timer.getTime()),
 			this.commissions.channel,
 			this.commissions.message
 		).then(message => {
