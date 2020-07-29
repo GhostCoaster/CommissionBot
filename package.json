@@ -5,7 +5,7 @@
 	"main": "build/commission_bot.js",
 	"scripts": {
 		"setup": "mkdir build",
-		"run": "tsc src/commission_bot.ts --outDir ./build && node build/commission_bot.js"
+		"run": "tsc && node build/commission_bot.js"
 	},
 	"author": "Gnarwhal, Balduvian",
 	"license": "ISC",

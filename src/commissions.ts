@@ -103,6 +103,13 @@ export class Commissions {
 		return user === this.gameMaster;
 	}
 
+	forward(message: Discord.Message) {
+		if (message.member === null || this.currentRound.roundType.id !== RoundIndex.DRAW) return;
+		if (!message.member.roles.cache.has(RoleManager.getRole().id)) {
+			message.delete();
+		}
+	}
+
 	/* unfinished */
 	getAttachmentImage(attachment: Discord.MessageAttachment) {
 		return new Promise<Buffer>((accept, reject) => {

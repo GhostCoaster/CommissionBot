@@ -1,4 +1,3 @@
-
 import * as Discord from 'discord.js'
 import * as Login from './login'
 import * as Commmand from './command'
@@ -8,8 +7,9 @@ import { Commissions } from './commissions'
 import { brotliCompressSync } from 'zlib';
 import * as Util from './util';
 
+let data = require('../data.json');
+
 const bot = new Discord.Client();
-const activeCommissions = Array<Commissions>();
 
 bot.on('ready', () => {
 	console.log('commissions bot online');
@@ -84,6 +84,11 @@ Commmand.addCommand('time', message => {
 
 bot.on('message', message => {
 	Commmand.handleCommand(bot, message);
+
+	if (message.guild === null) return;
+	let index = CommissionsList.findCommissions(message.guild);
+	if (index === -1) return;
+	CommissionsList.activeCommissions[index].forward(message);
 });
 
 bot.on('messageReactionAdd', (messageReaction, user) => {
