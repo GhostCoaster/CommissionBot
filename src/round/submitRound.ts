@@ -31,7 +31,7 @@ export class SubmitRound extends Round {
 
 		this.timer.start();
 
-		addAnyCommand(message => {
+		addAnyCommand(this.commissions.channel, message => {
 			if (message.attachments.size == 0) return message.delete();
 
 			let playerIndex = this.commissions.players.indexOf(message.author);
@@ -58,6 +58,6 @@ export class SubmitRound extends Round {
 	onEnd(): void {
 		this.timer.stop();
 
-		removeAnyCommand();
+		removeAnyCommand(this.commissions.channel);
 	}
 }

@@ -60,7 +60,7 @@ export class Commissions {
 		}
 
 		/* handle global commissions removal */
-		let thisIndex = findCommissions(this.guild);
+		let thisIndex = findCommissions(this.channel);
 		if (thisIndex !== -1) removeCommissions(thisIndex);
 	}
 

@@ -18,10 +18,11 @@ bot.on('ready', () => {
 	/* setup roles in all guilds */
 	bot.guilds.cache.forEach(guild => {
 		RoleManager.init(guild);
+		RoleManager.purge(guild);
 	});
 });
 
-Commmand.addCommand('commiss', message => {
+Commmand.addGlobalCommand('commiss', message => {
 	/* only admins can start it */
 	if (!message.member) return;
 	if (!Util.isAdmin(message.member)) return;
@@ -30,11 +31,12 @@ Commmand.addCommand('commiss', message => {
 	if (errMessage) message.channel.send(errMessage);
 });
 
-Commmand.addCommand('stop', message => {
+Commmand.addGlobalCommand('stop', message => {
 	if (message.guild === null) return;
+	if (message.channel.type !== 'text') return;
 
-	let index = CommissionsList.findCommissions(message.guild);
-	if (index === -1) return void message.channel.send('No commissions going on in this server!');
+	let index = CommissionsList.findCommissions(message.channel);
+	if (index === -1) return void message.channel.send('No commissions going on in this channel!');
 
 	/* only the game master can stop it */
 	let commissions = CommissionsList.activeCommissions[index];
@@ -45,11 +47,12 @@ Commmand.addCommand('stop', message => {
 	message.channel.send('Commiss stopped!');
 });
 
-Commmand.addCommand('time', message => {
+Commmand.addGlobalCommand('time', message => {
 	if (message.guild === null) return;
+	if (message.channel.type !== 'text') return;
 
-	let index = CommissionsList.findCommissions(message.guild);
-	if (index === -1) return void message.channel.send('No commissions going on in this server!');
+	let index = CommissionsList.findCommissions(message.channel);
+	if (index === -1) return void message.channel.send('No commissions going on in this channel!');
 	let commissions = CommissionsList.activeCommissions[index];
 
 	let parts = message.content.split(' ');
@@ -89,8 +92,9 @@ bot.on('message', message => {
 	if (bot.user === null) return;
 	if (message.author.id === bot.user.id) return;
 	if (message.guild === null) return;
+	if (message.channel.type !== 'text') return;
 
-	const index = CommissionsList.findCommissions(message.guild);
+	const index = CommissionsList.findCommissions(message.channel);
 	if (index === -1) return;
 
 	if (CommissionsList.activeCommissions[index].shouldDiscard(message))

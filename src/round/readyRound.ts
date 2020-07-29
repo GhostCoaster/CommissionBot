@@ -24,7 +24,7 @@ export class ReadyRound extends Round {
 		});
 
 		/* if the gamemaster needs to bypass the ready system */
-		addCommand('force', message => {
+		addCommand(this.commissions.channel, 'force', message => {
 			this.commissions.nextRound();
 		})
 	}
@@ -35,6 +35,6 @@ export class ReadyRound extends Round {
 			removeReactRemove(this.commissions.message);
 		}
 
-		removeCommand('force');
+		removeCommand(this.commissions.channel, 'force');
 	}
 }

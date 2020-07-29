@@ -17,7 +17,7 @@ export class JoinRound extends Round.Round {
 			});
 		});
 
-		addCommand('start', message => {
+		addCommand(this.commissions.channel, 'start', message => {
 			if (!this.commissions.isGameMaster(message.author)) return;
 
 			if (this.commissions.players.length < 2)
@@ -33,6 +33,6 @@ export class JoinRound extends Round.Round {
 			removeReactRemove(this.commissions.message)
 		}
 
-		removeCommand('start');
+		removeCommand(this.commissions.channel, 'start');
 	}
 }

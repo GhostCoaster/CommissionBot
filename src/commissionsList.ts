@@ -9,10 +9,9 @@ export const activeCommissions = Array<Commissions>();
  */
 export let addCommissions = (user: Discord.User, channel: Discord.TextChannel | Discord.DMChannel | Discord.NewsChannel): string | undefined => {
 	if (channel.type !== 'text') return 'Can\'t make a commissions in this channel!';
-	let guild = channel.guild;
 
 	let available = activeCommissions.every(commissions => {
-		return commissions.guild !== guild;
+		return commissions.channel !== channel;
 	});
 
 	if (available) {
@@ -24,14 +23,14 @@ export let addCommissions = (user: Discord.User, channel: Discord.TextChannel | 
 	}
 }
 
-export let findCommissions = (guild: Discord.Guild): number => {
-	let index = activeCommissions.findIndex(Commissions => {
-		return Commissions.guild === guild;
+export const findCommissions = (channel: Discord.TextChannel): number => {
+	const index = activeCommissions.findIndex(Commissions => {
+		return Commissions.channel === channel;
 	});
 
 	return index;
 }
 
-export let removeCommissions = (index: number) => {
+export const removeCommissions = (index: number) => {
 	activeCommissions.splice(index, 1);
 }

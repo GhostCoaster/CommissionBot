@@ -1,5 +1,5 @@
+
 import * as Discord from 'discord.js'
-import { Duplex } from 'stream';
 
 export interface OnMessage {
 	(message: Discord.Message): void;
@@ -9,21 +9,22 @@ export interface OnReact {
 	(reaction: Discord.MessageReaction, user: Discord.User): void;
 };
 
-interface CommandPair {
-	keyword: string;
+interface CommandDefinition {
+	channel?: Discord.TextChannel;
+	keyword?: string;
 	onMessage: OnMessage;
 };
 
-interface ReactPair {
+interface ReactDefinition {
 	message: Discord.Message;
 	onReact: OnReact;
 };
 
 const delimiter = '^';
 
-let commands = Array<CommandPair>();
-let reactAdds = Array<ReactPair>();
-let reactRemoves = Array<ReactPair>();
+let commands = Array<CommandDefinition>();
+let reactAdds = Array<ReactDefinition>();
+let reactRemoves = Array<ReactDefinition>();
 
 /* util */
 let removeFromArray = <T>(array: Array<T>, find: (member: T) => boolean) => {
@@ -33,18 +34,24 @@ let removeFromArray = <T>(array: Array<T>, find: (member: T) => boolean) => {
 	array.splice(removeIndex, 1);
 }
 
-export let addCommand = (keyword: string, onMessage: OnMessage) => {
-	commands.push({keyword, onMessage})
+export const addCommand = (channel: Discord.TextChannel, keyword: string, onMessage: OnMessage) => {
+	commands.push({channel, keyword, onMessage});
 }
-export let addAnyCommand = (onMessage: OnMessage) => {
-	addCommand('', onMessage);
+export const addAnyCommand = (channel: Discord.TextChannel, onMessage: OnMessage) => {
+	commands.push({channel, onMessage});
+}
+export const addGlobalCommand = (keyword: string, onMessage: OnMessage) => {
+	commands.push({keyword, onMessage});
 }
 
-export let removeCommand = (keyword: string) => {
-	removeFromArray(commands, command => command.keyword === keyword);
+export const removeCommand = (channel: Discord.TextChannel | undefined, keyword: string | undefined) => {
+	removeFromArray(commands, command => command.keyword === keyword && command.channel === channel);
 }
-export let removeAnyCommand = () => {
-	removeCommand('')
+export const removeAnyCommand = (channel: Discord.TextChannel) => {
+	removeFromArray(commands, command => command.channel === channel && !command.keyword);
+}
+export const removeGlobalCommand = (keyword: string) => {
+	removeFromArray(commands, command => command.keyword === keyword && !command.channel);
 }
 
 export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
@@ -54,7 +61,15 @@ export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
 	let text = message.content;
 
 	commands.every(command => {
-		if (command.keyword === '' || text.startsWith(delimiter + command.keyword)) {
+		if (
+			(
+				command.channel === undefined ||
+				command.channel === message.channel
+			) && (
+				command.keyword === undefined ||
+				text.startsWith(delimiter + command.keyword)
+			)
+		) {
 			command.onMessage(message);
 			return false;
 		}

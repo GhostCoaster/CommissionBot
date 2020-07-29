@@ -10,7 +10,7 @@ export class ReferenceRound extends Round {
 		this.originalIndex = this.commissions.playerIndex;
 		this.updateReferenceMessage(this.commissions.players[this.originalIndex]);
 
-		addCommand('pass', message => {
+		addCommand(this.commissions.channel, 'pass', message => {
 			if (!this.commissions.isCurrentPlayer(message.author)) return;
 	
 			this.commissions.cycleCurrentPlayer();
@@ -25,7 +25,7 @@ export class ReferenceRound extends Round {
 			}
 		});
 
-		addAnyCommand(message => {
+		addAnyCommand(this.commissions.channel, message => {
 			if (!this.commissions.isCurrentPlayer(message.author)) return;
 
 			/* could potentially put an actual image check here */
@@ -42,8 +42,8 @@ export class ReferenceRound extends Round {
 	}
 
 	onEnd(): void {
-		removeCommand('pass');
-		removeAnyCommand();
+		removeCommand(this.commissions.channel, 'pass');
+		removeAnyCommand(this.commissions.channel);
 	}
 
 	updateReferenceMessage(player: User) {

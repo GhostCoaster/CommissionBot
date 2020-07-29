@@ -8,8 +8,8 @@ let internalRole = undefined as Discord.Role | undefined;
 
 export let init = (guild: Discord.Guild) => {
 	return new Promise<Discord.Role>((accept, reject) => {
+		/* see if role has been created by this bot before on this server */
 		let foundRole = guild.roles.cache.find((role, key, collection) => {
-			console.log(`checking role ${role.name} against ${ROLE_NAME}`);
 			return role.name === ROLE_NAME;
 		});
 	
@@ -64,4 +64,19 @@ let createRole = (guild: Discord.Guild) => {
 
 export let getRole = () => {
 	return internalRole as Discord.Role
+}
+
+/**
+ * cleans up any residual commissioner roles
+ * from a pervious session
+ * 
+ * should only be called on startup
+ * 
+ * call per guild
+ */
+export let purge = (guild: Discord.Guild) => {
+	guild.members.cache.forEach(member => {
+		if (member.roles.cache.has(getRole().id))
+			member.roles.remove(getRole());
+	});
 }
