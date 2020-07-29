@@ -6,23 +6,15 @@ import { removeReactAdd, removeReactRemove, addCommand, removeCommand } from '..
 
 export class JoinRound extends Round.Round {
 	onStart(): void {
-		updateMessage(
+		this.commissions.updateMessage(
 			'Commissions about to begin',
-			'react to this message to join',
-			undefined,
-			this.commissions.channel,
-			this.commissions.message
+			'react to this message to join'
 		).then(message => {
-			this.commissions.message = message;
- 
 			setReact(message, '☑️', (messageReaction, user) => {
 				this.commissions.playerJoin(user);
 			}, (messageReaction, user) => {
 				this.commissions.playerLeave(user);
 			});
-
-		}).catch(() => {
-			console.log('something went wrong');
 		});
 
 		addCommand('start', message => {

@@ -14,33 +14,21 @@ export class DrawRound extends Round {
 		super.construct(roundType, commissions);
 
 		this.timer = new Timer(this.commissions.drawTime, 5, secondsLeft => {
-			/* edit the message every 5 seconds */
-			if (this.commissions.message) {
-				editMessage(
-					'Currently drawing',
-					'Submit after time runs out',
-					Util.generateDescription(secondsLeft),
-					this.commissions.message
-				);
-			}
+			this.commissions.editMessage(undefined, undefined, Util.timeDescription(secondsLeft));
 		}, () => {
 			this.commissions.nextRound();
 		});
 	}
 
 	onStart(): void {
-		let description = `Time left: ${Util.timeString(this.timer.getTime())}`;
+		console.log(`here >> ${this.commissions.message}`);
 
-		updateMessage(
+		this.commissions.updateMessage(
 			'Currently drawing',
 			'Submit after time runs out',
-			Util.generateDescription(this.timer.getTime()),
-			this.commissions.channel,
-			this.commissions.message
-		).then(message => {
-			this.commissions.message = message;
-		}).catch(err => console.log(err));
-
+			Util.timeDescription(this.timer.getTime())
+		);
+		
 		this.timer.start();
 	}
 	

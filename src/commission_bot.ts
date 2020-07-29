@@ -6,6 +6,7 @@ import * as RoleManager from './roleManager'
 import { Commissions } from './commissions'
 import { brotliCompressSync } from 'zlib';
 import * as Util from './util';
+import { userInfo } from 'os';
 
 let data = require('../data.json');
 
@@ -85,10 +86,15 @@ Commmand.addCommand('time', message => {
 bot.on('message', message => {
 	Commmand.handleCommand(bot, message);
 
+	if (bot.user === null) return;
+	if (message.author.id === bot.user.id) return;
 	if (message.guild === null) return;
-	let index = CommissionsList.findCommissions(message.guild);
+
+	const index = CommissionsList.findCommissions(message.guild);
 	if (index === -1) return;
-	CommissionsList.activeCommissions[index].forward(message);
+
+	if (CommissionsList.activeCommissions[index].shouldDiscard(message))
+		message.delete();
 });
 
 bot.on('messageReactionAdd', (messageReaction, user) => {

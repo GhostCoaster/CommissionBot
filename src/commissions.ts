@@ -8,6 +8,7 @@ import * as fs from 'fs'
 import * as https from 'https'
 import { cpus } from 'os';
 import { removeCommissions, findCommissions } from './commissionsList';
+import * as MainMessage from './mainMessage';
 
 /**
  * represents a game of commissions happening
@@ -88,6 +89,38 @@ export class Commissions {
 		});
 	}
 
+	/**
+	 * call this instead of updateMessage() in mainMessage.ts
+	 * this manages the internal commissions message automatically
+	 * 
+	 * has no catch because this should never reasonably fail
+	 * and if it does we have no system to recover it
+	 */
+	updateMessage(bigText: string, smallText: string, description?: string) {
+		return new Promise<Discord.Message>(accept => {
+			MainMessage.updateMessage(bigText, smallText, description,
+				this.channel,
+				this.message
+			).then(message => {
+				this.message = message;
+				accept(message);
+			}).catch(err => console.log('something went wrong: ' + err));
+		});
+	}
+
+	/**
+	 * call this instead of editMessage() in mainMessage.ts
+	 */
+	editMessage(bigText: string | undefined, smallText: string | undefined, description?: string) {
+		return new Promise<Discord.Message>((accept, reject) => {
+			if (!this.message) return void reject('message does not exist');
+
+			MainMessage.editMessage(bigText, smallText, description, this.message)
+				.then(message => accept(message))
+				.catch(err => console.log('$omething went wrong: ' + err));
+		});
+	}
+
 	/* UTIL */
 
 	isCurrentPlayer(user: Discord.User) {
@@ -103,11 +136,14 @@ export class Commissions {
 		return user === this.gameMaster;
 	}
 
-	forward(message: Discord.Message) {
-		if (message.member === null || this.currentRound.roundType.id !== RoundIndex.DRAW) return;
+	shouldDiscard(message: Discord.Message): boolean {
+		if (message.member === null) return true;
+
 		if (!message.member.roles.cache.has(RoleManager.getRole().id)) {
-			message.delete();
+			return true;
 		}
+
+		return false;
 	}
 
 	/* unfinished */

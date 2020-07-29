@@ -16,29 +16,18 @@ export class SubmitRound extends Round {
 		super.construct(roundType, commissions);
 
 		this.timer = new Timer(60, 5, secondsLeft => {
-			if (this.commissions.message) {
-				editMessage(
-					'Submission Minute',
-					'Send your completed commission',
-					Util.generateDescription(secondsLeft),
-					this.commissions.message
-				);
-			}
+			this.commissions.editMessage(undefined, undefined, Util.timeDescription(secondsLeft));
 		}, () => {
 			this.commissions.nextRound();
 		});
 	}
 
 	onStart(): void {
-		updateMessage(
+		this.commissions.updateMessage(
 			'Submission Minute',
 			'Send your completed commission',
-			Util.generateDescription(this.timer.getTime()),
-			this.commissions.channel,
-			this.commissions.message
-		).then(message => {
-			this.commissions.message = message;
-		}).catch(err => console.log(err));
+			Util.timeDescription(this.timer.getTime()),
+		);
 
 		this.timer.start();
 

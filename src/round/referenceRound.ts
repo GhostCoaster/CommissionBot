@@ -26,10 +26,7 @@ export class ReferenceRound extends Round {
 		});
 
 		addAnyCommand(message => {
-			console.log('here');
 			if (!this.commissions.isCurrentPlayer(message.author)) return;
-
-			console.log('now');
 
 			/* could potentially put an actual image check here */
 			if (message.attachments.size === 0) {
@@ -50,18 +47,9 @@ export class ReferenceRound extends Round {
 	}
 
 	updateReferenceMessage(player: User) {
-		console.log('updating reference message...');
-
-		updateMessage(
+		this.commissions.updateMessage(
 			'Selecting image to draw',
 			`<@${player.id}> is selecting`,
-			undefined,
-			this.commissions.channel,
-			this.commissions.message
-		).then(message => {
-			this.commissions.message = message;
-		}).catch(err => {
-			console.log(`something went wrong ${err}`);
-		});
+		);
 	}
 }

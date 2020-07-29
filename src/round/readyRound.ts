@@ -1,21 +1,16 @@
 import { Round } from './round'
-import { updateMessage, setReact } from '../mainMessage';
+import { setReact } from '../mainMessage';
 import { removeReactAdd, removeReactRemove, addCommand, removeCommand } from '../command';
 
 export class ReadyRound extends Round {
 	numReady = 0;
 
 	onStart(): void {
-		updateMessage(
+		this.commissions.updateMessage(
 			'Get ready to draw',
 			'React to this message when you\'re ready',
-			undefined,
-			this.commissions.channel,
-			this.commissions.message
 		).then(message => {
-			this.commissions.message = message;
-
-			setReact(this.commissions.message, '✅', (messageReact, user) => {
+			setReact(message, '✅', (messageReact, user) => {
 				++this.numReady;
 
 				/* everyone in ready */
@@ -26,12 +21,9 @@ export class ReadyRound extends Round {
 			}, (messageReact, user) => {
 				--this.numReady;
 			});
-
-		}).catch(err => {
-			console.log(err);
 		});
 
-		/* if the gamemaster need to bypass the ready system */
+		/* if the gamemaster needs to bypass the ready system */
 		addCommand('force', message => {
 			this.commissions.nextRound();
 		})
