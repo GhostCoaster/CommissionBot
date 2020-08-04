@@ -99,12 +99,9 @@ export class Commissions {
 	 * has no catch because this should never reasonably fail
 	 * and if it does we have no system to recover it
 	 */
-	updateMessage(bigText: string, smallText: string, description?: string) {
+	updateMessage(options: MainMessage.EmbedOptions) {
 		return new Promise<Discord.Message>(accept => {
-			MainMessage.updateMessage(bigText, smallText, description,
-				this.channel,
-				this.message
-			).then(message => {
+			MainMessage.updateMessage(options, this.channel, this.message).then(message => {
 				this.message = message;
 				accept(message);
 			}).catch(err => console.log('something went wrong: ' + err));
@@ -114,11 +111,11 @@ export class Commissions {
 	/**
 	 * call this instead of editMessage() in mainMessage.ts
 	 */
-	editMessage(bigText: string | undefined, smallText: string | undefined, description?: string) {
+	editMessage(options: MainMessage.EmbedOptions) {
 		return new Promise<Discord.Message>((accept, reject) => {
 			if (!this.message) return void reject('message does not exist');
 
-			MainMessage.editMessage(bigText, smallText, description, this.message)
+			MainMessage.editMessage(options, this.message)
 				.then(message => accept(message))
 				.catch(err => console.log('$omething went wrong: ' + err));
 		});
@@ -139,12 +136,34 @@ export class Commissions {
 		return user === this.gameMaster;
 	}
 
+	isPlayer(user: Discord.User) {
+		return !this.players.every(player => {
+			player !== user;
+		});
+	}
+
 	shouldDiscard(message: Discord.Message): boolean {
 		if (message.member === null) return true;
 
 		if (message.author === this.gameMaster) return false;
 		
 		if (!message.member.roles.cache.has(RoleManager.getRole().id)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * returns whether this reaction should be discarded
+	 * return from original function if true
+	 * 
+	 * @param messsageReaction 
+	 */
+	filterReact(messsageReact: Discord.MessageReaction, user: Discord.User): boolean {
+		if (!this.isPlayer(user)) {
+			messsageReact.users.remove(user);
+
 			return true;
 		}
 

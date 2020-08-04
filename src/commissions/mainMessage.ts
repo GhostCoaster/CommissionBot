@@ -4,51 +4,73 @@ import { OnReact, addReactAdd, addReactRemove } from '../command'
 
 let attachment: Discord.MessageAttachment;
 
-const DEFAULT_COLOR = 0x99d9ea;
-const INACTIVE_COLOR = 0x2e2e2e;
+const DEFAULT_COLOR = 0x99d9ea; /* paint default light blue color */
+const INACTIVE_COLOR = 0x2e2e2e; /* a dark gray drab color */
 
 export const init = () => {
 	attachment = new Discord.MessageAttachment('./res/paint.png', 'paint.png');
 }
 
-const createEmbed = (bigText: string, smallText: string, description: string, color = DEFAULT_COLOR) => {
+export interface EmbedOptions {
+	color?: number;
+	description?: string;
+	fields?: Discord.EmbedFieldData[];
+	image?: string;
+}
+
+const createEmbed = (options: EmbedOptions) => {
 	const embed = new Discord.MessageEmbed()
-	.setColor(color)
+	.setColor(options.color || DEFAULT_COLOR)
 	.setTitle('Commissions')
-	.setDescription(description)
+	.setDescription(options.description || '')
 	.attachFiles([attachment])
 	.setThumbnail('attachment://paint.png')
-	.addField(bigText, smallText);
+	.addFields(options.fields || [])
+	.setImage(options.image || '');
 
 	return embed;
 }
 
-export const editMessage = (bigText: string | undefined, smallText: string | undefined, description: string | undefined, message: Discord.Message) => {
+export const editMessage = (options: EmbedOptions, message: Discord.Message) => {
 	return new Promise<Discord.Message>((accept, reject) => {
 		const oldEmbed = message.embeds[0];
-		const usingBigText = bigText || oldEmbed.fields[0].name;
-		const usingSmallText = smallText || oldEmbed.fields[0].value;
-		const usingDescription = description || oldEmbed.description;
 
-		message.edit(createEmbed(usingBigText, usingSmallText, usingDescription || '')).then(message => accept(message)).catch(reason => reject(reason));
+		/* if no description or field is provided use old values */
+		if (!options.description) options.description = oldEmbed.description;
+		if (!options.fields) options.fields = oldEmbed.fields;
+
+		message.edit(createEmbed(options)).then(message => accept(message)).catch(reason => reject(reason));
 	});
 }
 
-export const updateMessage = (bigText: string, smallText: string, description: string | undefined, channel: Discord.TextChannel, message: Discord.Message | undefined = undefined) => {
+/**
+ * do not pass in an argument for message if the commissions
+ * does not have a message associated with it yet
+ * 
+ * this will create the main message if applicable
+ * 
+ * @param options 
+ * @param channel 
+ * @param message 
+ */
+export const updateMessage = (options: EmbedOptions, channel: Discord.TextChannel, message?: Discord.Message) => {
 	return new Promise<Discord.Message>((accept, reject) => {
 		/* make the previous message dead */
 		if (message) {
-			message.reactions.removeAll();
-			message.attachments.clear();
-
 			if (message.embeds.length > 0) {
 				const oldEmbed = message.embeds[0];
-				message.edit(createEmbed(oldEmbed.fields[0].name, oldEmbed.fields[0].value, oldEmbed.description || '', INACTIVE_COLOR));	
+
+				message.edit(createEmbed({
+					color: INACTIVE_COLOR,
+					description: oldEmbed.description,
+					fields: oldEmbed.fields,
+					image: oldEmbed.image ? oldEmbed.image.url : ''
+				}));	
 			}
 		}
 
 		/* send new message */
-		channel.send(createEmbed(bigText, smallText, description || '')).then(message => accept(message)).catch(reason => reject(reason));
+		channel.send(createEmbed(options)).then(message => accept(message)).catch(reason => reject(reason));
 	});
 }
 

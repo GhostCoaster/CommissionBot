@@ -8,11 +8,19 @@ export class Timer {
 	private onInterval: (secondsLeft: number) => void;
 	private onEnd: () => void;
 
-	constructor(time: number, interval: number, onInterval: (secondsLeft: number) => void, onEnd: () => void) {
-		this.time = time;
-		this.interval = interval;
-		this.onInterval = onInterval;
-		this.onEnd = onEnd;
+	/**
+	 * pass in no parameters to make a dummy timer
+	 * 
+	 * @param time 
+	 * @param interval 
+	 * @param onInterval 
+	 * @param onEnd 
+	 */
+	constructor(time?: number, interval?: number, onInterval?: (secondsLeft: number) => void, onEnd?: () => void) {
+		this.time = time || 0;
+		this.interval = interval || 0;
+		this.onInterval = onInterval || (s => {});
+		this.onEnd = onEnd || (() => {});
 
 		this.going = false;
 	}

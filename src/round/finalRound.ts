@@ -26,14 +26,30 @@ export class FinalRound extends Round {
 		});
 
 		if (contenders.length === 0) {
-			this.commissions.updateMessage('Round Ended', 'No one wins?');
+			this.commissions.updateMessage({
+				fields: [{
+					name: 'Round Ended',
+					value: 'No one wins?'
+				}]
+			});
 		} else {
 			const winningSubmission = contenders[Math.floor(Math.random() * contenders.length)];
 
-			this.commissions.updateMessage('Round Ended', `<@${winningSubmission.message.author.id}> has won!`);
+			const winningAttachment = winningSubmission.message.attachments.first();
+			const url = winningAttachment ? winningAttachment.url : '';
+
+			this.commissions.updateMessage({
+				fields: [{
+					name: 'Round Ended',
+					value: `<@${winningSubmission.message.author.id}> has won!`
+				}],
+				image: url
+			});
 		}
 
 		addCommand(this.commissions.channel, 'next', message => {
+			if (message.author !== this.commissions.gameMaster) return;
+			
 			this.commissions.nextRound();
 		});
 	}

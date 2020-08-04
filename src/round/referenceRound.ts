@@ -1,7 +1,7 @@
 import { Round } from "./round";
 import { updateMessage } from "../commissions/mainMessage";
 import { addAnyCommand, addCommand, removeCommand, removeAnyCommand } from '../command';
-import { User } from "discord.js";
+import { User, ReactionUserManager } from "discord.js";
 
 export class ReferenceRound extends Round {
 	originalIndex = 0;
@@ -23,6 +23,14 @@ export class ReferenceRound extends Round {
 			} else {
 				this.updateReferenceMessage(this.commissions.players[this.commissions.playerIndex]);
 			}
+		});
+
+		/* if the gamemaster doesn't like someone */
+		addCommand(this.commissions.channel, 'skip', message => {
+			if (message.author !== this.commissions.gameMaster) return;
+			
+			this.commissions.cycleCurrentPlayer();
+			this.updateReferenceMessage(this.commissions.players[this.commissions.playerIndex]);
 		});
 
 		addAnyCommand(this.commissions.channel, message => {
@@ -48,9 +56,11 @@ export class ReferenceRound extends Round {
 	}
 
 	updateReferenceMessage(player: User) {
-		this.commissions.updateMessage(
-			'Selecting image to draw',
-			`<@${player.id}> is selecting`,
-		);
+		this.commissions.updateMessage({
+			fields: [{
+				name:'Selecting image to draw',
+				value: `<@${player.id}> is selecting`
+			}]
+		});
 	}
 }

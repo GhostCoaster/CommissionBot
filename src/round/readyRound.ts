@@ -6,15 +6,19 @@ export class ReadyRound extends Round {
 	numReady = 0;
 
 	onStart(): void {
-		this.commissions.updateMessage(
-			'Get ready to draw',
-			'React to this message when you\'re ready',
-		).then(message => {
+		this.commissions.updateMessage({
+			fields: [{
+				name: 'Get ready to draw',
+				value: 'React to this message when you\'re ready'
+			}]
+		}).then(message => {
 			setReact(message, '✅', (messageReact, user) => {
+				if (this.commissions.filterReact(messageReact, user)) return;
+
 				++this.numReady;
 
 				/* everyone in ready */
-				if (this.numReady == this.commissions.players.length) {
+				if (this.numReady === this.commissions.players.length) {
 					this.commissions.nextRound();
 				}
 
@@ -25,8 +29,9 @@ export class ReadyRound extends Round {
 
 		/* if the gamemaster needs to bypass the ready system */
 		addCommand(this.commissions.channel, 'force', message => {
-			this.commissions.nextRound();
-		})
+			if (message.author === this.commissions.gameMaster)
+				this.commissions.nextRound();
+		});
 	}
 
 	onEnd(): void {

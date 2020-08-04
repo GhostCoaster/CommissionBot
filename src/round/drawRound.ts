@@ -6,33 +6,36 @@ import { Timer } from '../timer';
 import * as Util from '../util';
 import { RoundType } from './rounds';
 import { Commissions } from '../commissions/commissions';
+import { addCommand, removeCommand } from '../command';
 
 export class DrawRound extends Round {
-	timer: Timer = undefined as unknown as Timer;
-
-	construct(roundType: RoundType, commissions: Commissions) {
-		super.construct(roundType, commissions);
-
+	onStart(): void {
 		this.timer = new Timer(this.commissions.drawTime, 5, secondsLeft => {
-			this.commissions.editMessage(undefined, undefined, Util.timeDescription(secondsLeft));
+			this.commissions.editMessage({ description: Util.timeDescription(secondsLeft) });
 		}, () => {
 			this.commissions.nextRound();
 		});
-	}
 
-	onStart(): void {
-		console.log(`here >> ${this.commissions.message}`);
-
-		this.commissions.updateMessage(
-			'Currently drawing',
-			'Submit after time runs out',
-			Util.timeDescription(this.timer.getTime())
-		);
-		
 		this.timer.start();
+
+		this.commissions.updateMessage({
+			description: Util.timeDescription(this.timer.getTime()),
+			fields: [{
+				name: 'Currently drawing',
+				value: 'Submit after time runs out'
+			}]
+		});
+
+		/* if the gamemaster needs to bypass the ready system */
+		addCommand(this.commissions.channel, 'force', message => {
+			if (message.author === this.commissions.gameMaster)
+				this.commissions.nextRound();
+		});
 	}
 	
 	onEnd(): void {
 		this.timer.stop();
+
+		removeCommand(this.commissions.channel, 'force');
 	}
 }

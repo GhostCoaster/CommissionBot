@@ -1,15 +1,17 @@
-import * as Round from './round'
+import { Round } from './round'
 import { Commissions } from '../commissions/commissions';
 import { RoundType } from './rounds';
 import { updateMessage, setReact } from '../commissions/mainMessage';
 import { removeReactAdd, removeReactRemove, addCommand, removeCommand } from '../command';
 
-export class JoinRound extends Round.Round {
+export class JoinRound extends Round {
 	onStart(): void {
-		this.commissions.updateMessage(
-			'Commissions about to begin',
-			'react to this message to join'
-		).then(message => {
+		this.commissions.updateMessage({
+			fields: [{
+				name: 'Commissions about to begin',
+				value: 'react to this message to join'
+			}]
+		}).then(message => {
 			setReact(message, '☑️', (messageReaction, user) => {
 				this.commissions.playerJoin(user);
 			}, (messageReaction, user) => {

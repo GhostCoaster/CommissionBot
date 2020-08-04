@@ -8,20 +8,28 @@ import * as Discord from 'discord.js';
 import { Timer } from '../timer';
 
 export class VoteRound extends Round {
-	timer: Timer = undefined as unknown as Timer
-
 	onStart(): void {
 		this.timer = new Timer(30, 5, secondsLeft => {
-			this.commissions.editMessage(undefined, undefined, Util.timeDescription(secondsLeft));
+			this.commissions.editMessage({ description: Util.timeDescription(secondsLeft) });
 		}, () => this.commissions.nextRound());
 
 		this.timer.start();
 
-		this.commissions.updateMessage(
-			'Voting',
-			'React with 📤 to upvote, React with 📥 to downvote',
-			Util.timeDescription(this.timer.getTime())
-		);
+		this.commissions.updateMessage({
+			description: Util.timeDescription(this.timer.getTime()),
+			fields: [{
+				name: 'Voting',
+				value: 'The submission with the highest score will win'
+			}, {
+				name: '📤',
+				value: 'upvote',
+				inline: true
+			}, {
+				name: '📥',
+				value: 'downvote',
+				inline: true
+			}]
+		});
 
 		addCommand(this.commissions.channel, 'force', message => {
 			this.commissions.nextRound();
@@ -51,27 +59,29 @@ export class VoteRound extends Round {
 				);
 			}
 
-			addReactAdd(message, (messageReaction, user) => {
+			addReactAdd(message, (messageReact, user) => {
+				if (this.commissions.filterReact(messageReact, user)) return;
+
 				/* upvote */
-				if (messageReaction.emoji.name === '📤') {
+				if (messageReact.emoji.name === '📤') {
 					++submission.rating;
 
 					removeOpposing(message, user, '📥', () => ++submission.rating)
 
 				/* downvote */
-				} else if (messageReaction.emoji.name === '📥') {
+				} else if (messageReact.emoji.name === '📥') {
 					--submission.rating;
 
 					removeOpposing(message, user, '📤', () => --submission.rating)
 				}
 			});
 
-			addReactRemove(message, (messageReaction, user) => {
+			addReactRemove(message, (messageReact, user) => {
 				/* upvote */
-				if (messageReaction.emoji.name === '📤') {
+				if (messageReact.emoji.name === '📤') {
 					--submission.rating;
 				/* downvote */
-				} else if (messageReaction.emoji.name === '📥') {
+				} else if (messageReact.emoji.name === '📥') {
 					++submission.rating;
 				}
 			});

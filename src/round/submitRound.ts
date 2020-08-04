@@ -11,26 +11,23 @@ import { Submission } from '../commissions/submission';
 
 export class SubmitRound extends Round {
 	numSubmissions = 0;
-	timer: Timer = undefined as unknown as Timer;
 
-	construct(roundType: RoundType, commissions: Commissions) {
-		super.construct(roundType, commissions);
-
+	onStart(): void {
 		this.timer = new Timer(60, 5, secondsLeft => {
-			this.commissions.editMessage(undefined, undefined, Util.timeDescription(secondsLeft));
+			this.commissions.editMessage({ description: Util.timeDescription(secondsLeft) });
 		}, () => {
 			this.commissions.nextRound();
 		});
-	}
-
-	onStart(): void {
-		this.commissions.updateMessage(
-			'Submission Minute',
-			'Send your completed commission',
-			Util.timeDescription(this.timer.getTime()),
-		);
 
 		this.timer.start();
+
+		this.commissions.updateMessage({
+			description: Util.timeDescription(this.timer.getTime()),
+			fields: [{
+				name: 'Submission Minute',
+				value: 'Send your completed commission'
+			}]
+		});
 
 		addAnyCommand(this.commissions.channel, message => {
 			if (message.attachments.size == 0) return message.delete();
