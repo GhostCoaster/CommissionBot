@@ -1,5 +1,5 @@
 import { Round } from './round'
-import { setReact } from '../mainMessage';
+import { setReact } from '../commissions/mainMessage';
 import { removeReactAdd, removeReactRemove, addCommand, removeCommand } from '../command';
 
 export class ReadyRound extends Round {

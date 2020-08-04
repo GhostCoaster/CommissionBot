@@ -1,11 +1,11 @@
 
 import { Round } from './round'
-import { updateMessage, editMessage } from '../mainMessage';
+import { updateMessage, editMessage } from '../commissions/mainMessage';
 import { Message } from 'discord.js';
 import { Timer } from '../timer';
 import * as Util from '../util';
 import { RoundType } from './rounds';
-import { Commissions } from '../commissions';
+import { Commissions } from '../commissions/commissions';
 
 export class DrawRound extends Round {
 	timer: Timer = undefined as unknown as Timer;

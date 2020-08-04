@@ -1,12 +1,13 @@
 import * as Discord from 'discord.js'
 import * as Login from './login'
 import * as Commmand from './command'
-import * as CommissionsList from './commissionsList'
+import * as CommissionsList from './commissions/commissionsList'
 import * as RoleManager from './roleManager'
-import { Commissions } from './commissions'
+import { Commissions } from './commissions/commissions'
 import { brotliCompressSync } from 'zlib';
 import * as Util from './util';
 import { userInfo } from 'os';
+import * as MainMessage from './commissions/mainMessage';
 
 let data = require('../data.json');
 
@@ -20,6 +21,8 @@ bot.on('ready', () => {
 		RoleManager.init(guild);
 		RoleManager.purge(guild);
 	});
+
+	MainMessage.init();
 });
 
 Commmand.addGlobalCommand('commiss', message => {
@@ -79,8 +82,11 @@ Commmand.addGlobalCommand('time', message => {
 		}
 	}
 
-	if (isNaN(totalTime)) return void message.channel.send('Incorrect number format');
+	totalTime = Math.floor(totalTime);
 
+	if (isNaN(totalTime)) return void message.channel.send('Incorrect number format');
+	if (totalTime < 1) return void message.channel.send('Time needs to be at least 1 second');
+	
 	commissions.drawTime = totalTime;
 
 	message.channel.send(`Commissions draw time set to ${Util.timeString(totalTime)}`);

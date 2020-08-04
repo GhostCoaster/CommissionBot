@@ -1,12 +1,19 @@
 
 import * as Discord from 'discord.js'
-import { OnReact, addReactAdd, addReactRemove } from './command'
+import { OnReact, addReactAdd, addReactRemove } from '../command'
 
-const createEmbed = (bigText: string, smallText: string, description: string) => {
-	const attachment = new Discord.MessageAttachment('./res/paint.png', 'paint.png');
+let attachment: Discord.MessageAttachment;
 
+const DEFAULT_COLOR = 0x99d9ea;
+const INACTIVE_COLOR = 0x2e2e2e;
+
+export const init = () => {
+	attachment = new Discord.MessageAttachment('./res/paint.png', 'paint.png');
+}
+
+const createEmbed = (bigText: string, smallText: string, description: string, color = DEFAULT_COLOR) => {
 	const embed = new Discord.MessageEmbed()
-	.setColor(0x99d9ea)
+	.setColor(color)
 	.setTitle('Commissions')
 	.setDescription(description)
 	.attachFiles([attachment])
@@ -29,12 +36,19 @@ export const editMessage = (bigText: string | undefined, smallText: string | und
 
 export const updateMessage = (bigText: string, smallText: string, description: string | undefined, channel: Discord.TextChannel, message: Discord.Message | undefined = undefined) => {
 	return new Promise<Discord.Message>((accept, reject) => {
-		const create = () => channel.send(createEmbed(bigText, smallText, description || '')).then(message => accept(message)).catch(reason => reject(reason));
+		/* make the previous message dead */
+		if (message) {
+			message.reactions.removeAll();
+			message.attachments.clear();
 
-		if (message)
-			message.delete().then(create).catch(err => reject(err));
-		else
-			create();
+			if (message.embeds.length > 0) {
+				const oldEmbed = message.embeds[0];
+				message.edit(createEmbed(oldEmbed.fields[0].name, oldEmbed.fields[0].value, oldEmbed.description || '', INACTIVE_COLOR));	
+			}
+		}
+
+		/* send new message */
+		channel.send(createEmbed(bigText, smallText, description || '')).then(message => accept(message)).catch(reason => reject(reason));
 	});
 }
 

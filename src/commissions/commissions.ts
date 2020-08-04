@@ -1,14 +1,15 @@
 
 import * as Discord from 'discord.js'
-import { Round } from './round/round'
-import { rounds, RoundIndex, createRound } from './round/rounds'
-import { JoinRound } from './round/joinRound';
-import * as RoleManager from './roleManager'
+import { Round } from '../round/round'
+import { rounds, RoundIndex, createRound } from '../round/rounds'
+import { JoinRound } from '../round/joinRound';
+import * as RoleManager from '../roleManager'
 import * as fs from 'fs'
 import * as https from 'https'
 import { cpus } from 'os';
 import { removeCommissions, findCommissions } from './commissionsList';
 import * as MainMessage from './mainMessage';
+import { Submission } from './submission';
 
 /**
  * represents a game of commissions happening
@@ -26,8 +27,8 @@ export class Commissions {
 	currentRound: Round;
 	drawTime: number;
 
-	submittedDrawings: Array<Discord.Message | undefined>;
-
+	submittedDrawings: Array<Submission | undefined>;
+	
 	constructor(gameMaster: Discord.User, channel: Discord.TextChannel) {
 		this.gameMaster = gameMaster;
 		this.channel = channel;
@@ -39,6 +40,8 @@ export class Commissions {
 
 		this.drawTime = 5 * 60;
 
+		this.message = undefined;
+		
 		this.currentRound = createRound(this, RoundIndex.JOIN);
 		this.currentRound.onStart();
 	}
@@ -139,6 +142,8 @@ export class Commissions {
 	shouldDiscard(message: Discord.Message): boolean {
 		if (message.member === null) return true;
 
+		if (message.author === this.gameMaster) return false;
+		
 		if (!message.member.roles.cache.has(RoleManager.getRole().id)) {
 			return true;
 		}

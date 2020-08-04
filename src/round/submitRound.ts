@@ -1,12 +1,13 @@
 
 import { Round } from './round'
-import { updateMessage, editMessage } from '../mainMessage';
+import { updateMessage, editMessage } from '../commissions/mainMessage';
 import { DiscordAPIError, Message } from 'discord.js';
 import { Timer } from '../timer';
 import { addAnyCommand, removeAnyCommand } from '../command';
 import * as Util from '../util';
 import { RoundType } from './rounds';
-import { Commissions } from '../commissions';
+import { Commissions } from '../commissions/commissions';
+import { Submission } from '../commissions/submission';
 
 export class SubmitRound extends Round {
 	numSubmissions = 0;
@@ -41,12 +42,12 @@ export class SubmitRound extends Round {
 			/* if it doesn't exist then this is the player's first submission */
 			let oldSubmission = this.commissions.submittedDrawings[playerIndex];
 			if (oldSubmission)
-				oldSubmission.delete();
+				oldSubmission.message.delete();
 			else
 				++this.numSubmissions;
 
 			/* record this as the player's submission */
-			this.commissions.submittedDrawings[playerIndex] = message;
+			this.commissions.submittedDrawings[playerIndex] = new Submission(message);
 
 			/* end submission early if everyone has submitted */
 			if (this.numSubmissions === this.commissions.players.length) {

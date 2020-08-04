@@ -20,7 +20,7 @@ export let timeString = (time: number) => {
 	var secondsPart = (seconds == 0) ? '' :
 		`${seconds} second${seconds == 1 ? '' : 's'}`;
 
-	return `${minutesPart} ${secondsPart}`;
+	return `${minutesPart}${minutes == 0 ? '' : ' '}${secondsPart}`;
 }
 
 export let timeDescription = (secondsLeft: number) => {

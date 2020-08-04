@@ -38,6 +38,8 @@ export class Timer {
 	
 				if (this.going && secondsLeft == 0) {
 					this.going = false;
+
+					this.onInterval(secondsLeft);
 					this.onEnd();
 
 				} else if (this.going && secondsLeft % this.interval == 0) {

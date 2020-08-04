@@ -1,5 +1,5 @@
 import { Round } from "./round";
-import { updateMessage } from "../mainMessage";
+import { updateMessage } from "../commissions/mainMessage";
 import { addAnyCommand, addCommand, removeCommand, removeAnyCommand } from '../command';
 import { User } from "discord.js";
 
@@ -34,6 +34,7 @@ export class ReferenceRound extends Round {
 				return;
 			}
 
+			this.commissions.cycleCurrentPlayer();
 			this.commissions.nextRound();
 		});
 

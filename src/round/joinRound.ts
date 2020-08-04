@@ -1,7 +1,7 @@
 import * as Round from './round'
-import { Commissions } from '../commissions';
+import { Commissions } from '../commissions/commissions';
 import { RoundType } from './rounds';
-import { updateMessage, setReact } from '../mainMessage';
+import { updateMessage, setReact } from '../commissions/mainMessage';
 import { removeReactAdd, removeReactRemove, addCommand, removeCommand } from '../command';
 
 export class JoinRound extends Round.Round {

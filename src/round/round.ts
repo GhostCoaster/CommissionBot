@@ -1,4 +1,4 @@
-import { Commissions } from "../commissions";
+import { Commissions } from "../commissions/commissions";
 import { RoundType, rounds } from "./rounds";
 
 export abstract class Round {
