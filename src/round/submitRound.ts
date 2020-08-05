@@ -32,7 +32,7 @@ export class SubmitRound extends Round {
 		addAnyCommand(this.commissions.channel, message => {
 			if (message.attachments.size == 0) return message.delete();
 
-			let playerIndex = this.commissions.players.indexOf(message.author);
+			let playerIndex = this.commissions.players.indexOf(message.member);
 			if (playerIndex === -1) return message.delete();
 
 			/* delete old submission from this player if it exists */

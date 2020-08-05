@@ -9,7 +9,18 @@ import { Timer } from '../timer';
 
 export class VoteRound extends Round {
 	onStart(): void {
-		this.timer = new Timer(30, 5, secondsLeft => {
+		/* don't do anything if there were no submissions */
+		/* or if there was only 1 (which will be the winner) */
+		let numSubmissions = 0;
+
+		this.commissions.submittedDrawings.forEach(submission => {
+			if (submission !== undefined) ++numSubmissions;
+		})
+
+		if (numSubmissions < 2) return void this.commissions.nextRound();
+		
+		/* actually set up voting round */
+		this.timer = new Timer(60, 5, secondsLeft => {
 			this.commissions.editMessage({ description: Util.timeDescription(secondsLeft) });
 		}, () => this.commissions.nextRound());
 

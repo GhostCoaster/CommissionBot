@@ -28,7 +28,7 @@ export class DrawRound extends Round {
 
 		/* if the gamemaster needs to bypass the ready system */
 		addCommand(this.commissions.channel, 'force', message => {
-			if (message.author === this.commissions.gameMaster)
+			if (this.commissions.isAdmin(message.member))
 				this.commissions.nextRound();
 		});
 	}

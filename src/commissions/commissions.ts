@@ -3,7 +3,7 @@ import * as Discord from 'discord.js'
 import { Round } from '../round/round'
 import { rounds, RoundIndex, createRound } from '../round/rounds'
 import { JoinRound } from '../round/joinRound';
-import * as RoleManager from '../roleManager'
+import { Roles, getRole } from '../role/roleManager'
 import * as fs from 'fs'
 import * as https from 'https'
 import { cpus } from 'os';
@@ -15,13 +15,13 @@ import { Submission } from './submission';
  * represents a game of commissions happening
  */
 export class Commissions {
-	gameMaster: Discord.User;
+	gameMaster: Discord.GuildMember;
 	channel: Discord.TextChannel;
 	guild: Discord.Guild;
 
 	message: undefined | Discord.Message;
 
-	players: Array<Discord.User>;
+	players: Array<Discord.GuildMember>;
 	playerIndex: number;
 
 	currentRound: Round;
@@ -29,7 +29,7 @@ export class Commissions {
 
 	submittedDrawings: Array<Submission | undefined>;
 	
-	constructor(gameMaster: Discord.User, channel: Discord.TextChannel) {
+	constructor(gameMaster: Discord.GuildMember, channel: Discord.TextChannel) {
 		this.gameMaster = gameMaster;
 		this.channel = channel;
 		this.guild = channel.guild;
@@ -67,29 +67,19 @@ export class Commissions {
 		if (thisIndex !== -1) removeCommissions(thisIndex);
 	}
 
-	playerJoin(user: Discord.User) {
-		this.players.push(user);
+	playerJoin(member: Discord.GuildMember) {
+		this.players.push(member);
 
-		/* get member from user */
-		this.guild.members.fetch({ user: user }).then(member => {
-			member.roles.add(RoleManager.getRole());
-		}).catch(() => {
-			console.log('could not find user in guild??');
-		});
+		member.roles.add(getRole(Roles.COMMISSIONER));
 	}
 
-	playerLeave(user: Discord.User) {
-		let index = this.players.indexOf(user);
+	playerLeave(member: Discord.GuildMember) {
+		let index = this.players.indexOf(member);
 		if (index === -1) return;
 
 		this.players.splice(index, 1);
 
-		/* get member from user */
-		this.guild.members.fetch({ user: user }).then(member => {
-			member.roles.remove(RoleManager.getRole());
-		}).catch(() => {
-			console.log('could not find user in guild??');
-		});
+		member.roles.remove(getRole(Roles.COMMISSIONER));
 	}
 
 	/**
@@ -123,8 +113,12 @@ export class Commissions {
 
 	/* UTIL */
 
-	isCurrentPlayer(user: Discord.User) {
-		return user === this.players[this.playerIndex]
+	getMember(user: Discord.User) {
+		return this.guild.members.cache.find(member => member.user === user);
+	}
+
+	isCurrentPlayer(member: Discord.GuildMember) {
+		return member === this.players[this.playerIndex];
 	}
 
 	cycleCurrentPlayer() {
@@ -132,22 +126,26 @@ export class Commissions {
 		this.playerIndex %= this.players.length;
 	}
 
-	isGameMaster(user: Discord.User) {
-		return user === this.gameMaster;
+	isAdmin(member: Discord.GuildMember) {
+		return member.hasPermission('ADMINISTRATOR')
+			|| member === this.gameMaster
+			|| member.roles.cache.has(getRole(Roles.HOSTER).id);
 	}
 
-	isPlayer(user: Discord.User) {
+	isPlayer(user: Discord.GuildMember | Discord.User) {
+		const id = user.id;
+
 		return !this.players.every(player => {
-			player !== user;
+			player.id !== id;
 		});
 	}
 
 	shouldDiscard(message: Discord.Message): boolean {
 		if (message.member === null) return true;
 
-		if (message.author === this.gameMaster) return false;
+		if (message.member === this.gameMaster) return false;
 		
-		if (!message.member.roles.cache.has(RoleManager.getRole().id)) {
+		if (!message.member.roles.cache.has(getRole(Roles.COMMISSIONER).id)) {
 			return true;
 		}
 
@@ -177,7 +175,7 @@ export class Commissions {
 				port: 80,
 				path: attachment.url,
 				method: 'GET'
-			  };
+			};
 
 			let request = https.request(options, res => {
 				res.on('data', data => {

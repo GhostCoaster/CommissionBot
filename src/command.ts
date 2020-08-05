@@ -1,8 +1,20 @@
 
 import * as Discord from 'discord.js'
 
+type GuildMessage = Discord.Message & {
+	guild: Discord.Guild
+	member: Discord.GuildMember
+	channel: Discord.TextChannel
+};
+
+const isGuildMessage = (message: Discord.Message): message is GuildMessage => {
+	return (message.member != null)
+		&& (message.guild != null)
+		&& message.channel.type === 'text';
+};
+
 export interface OnMessage {
-	(message: Discord.Message): void;
+	(message: GuildMessage): void;
 };
 
 export interface OnReact {
@@ -57,6 +69,7 @@ export const removeGlobalCommand = (keyword: string) => {
 export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
 	/* bot will not respond to own message */
 	if (bot.user && message.author.id === bot.user.id) return;
+	if (!isGuildMessage(message)) return;
 
 	let text = message.content;
 

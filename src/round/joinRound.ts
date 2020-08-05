@@ -12,15 +12,18 @@ export class JoinRound extends Round {
 				value: 'react to this message to join'
 			}]
 		}).then(message => {
-			setReact(message, '☑️', (messageReaction, user) => {
-				this.commissions.playerJoin(user);
-			}, (messageReaction, user) => {
-				this.commissions.playerLeave(user);
+			setReact(message, '☑️', (_, user) => {
+				const member = this.commissions.getMember(user);
+				if (member) this.commissions.playerJoin(member);
+			}, (_, user) => {
+				const member = this.commissions.getMember(user);
+				if (member) this.commissions.playerJoin(member);
 			});
 		});
 
 		addCommand(this.commissions.channel, 'start', message => {
-			if (!this.commissions.isGameMaster(message.author)) return;
+			if (!message.member) return;
+			if (!this.commissions.isAdmin(message.member)) return;
 
 			if (this.commissions.players.length < 2)
 				return void this.commissions.channel.send('Need at least two people to start a commissions!');

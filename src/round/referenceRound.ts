@@ -1,7 +1,8 @@
+
 import { Round } from "./round";
 import { updateMessage } from "../commissions/mainMessage";
 import { addAnyCommand, addCommand, removeCommand, removeAnyCommand } from '../command';
-import { User, ReactionUserManager } from "discord.js";
+import { User, ReactionUserManager, GuildMember } from "discord.js";
 
 export class ReferenceRound extends Round {
 	originalIndex = 0;
@@ -11,7 +12,7 @@ export class ReferenceRound extends Round {
 		this.updateReferenceMessage(this.commissions.players[this.originalIndex]);
 
 		addCommand(this.commissions.channel, 'pass', message => {
-			if (!this.commissions.isCurrentPlayer(message.author)) return;
+			if (!this.commissions.isCurrentPlayer(message.member)) return;
 	
 			this.commissions.cycleCurrentPlayer();
 			
@@ -27,14 +28,14 @@ export class ReferenceRound extends Round {
 
 		/* if the gamemaster doesn't like someone */
 		addCommand(this.commissions.channel, 'skip', message => {
-			if (message.author !== this.commissions.gameMaster) return;
+			if (!this.commissions.isAdmin(message.member)) return;
 			
 			this.commissions.cycleCurrentPlayer();
 			this.updateReferenceMessage(this.commissions.players[this.commissions.playerIndex]);
 		});
 
 		addAnyCommand(this.commissions.channel, message => {
-			if (!this.commissions.isCurrentPlayer(message.author)) return;
+			if (!this.commissions.isCurrentPlayer(message.member)) return;
 
 			/* could potentially put an actual image check here */
 			if (message.attachments.size === 0) {
@@ -55,7 +56,7 @@ export class ReferenceRound extends Round {
 		removeAnyCommand(this.commissions.channel);
 	}
 
-	updateReferenceMessage(player: User) {
+	updateReferenceMessage(player: GuildMember) {
 		this.commissions.updateMessage({
 			fields: [{
 				name:'Selecting image to draw',

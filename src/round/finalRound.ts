@@ -48,9 +48,8 @@ export class FinalRound extends Round {
 		}
 
 		addCommand(this.commissions.channel, 'next', message => {
-			if (message.author !== this.commissions.gameMaster) return;
-			
-			this.commissions.nextRound();
+			if (this.commissions.isAdmin(message.member))
+				this.commissions.nextRound();
 		});
 	}
 

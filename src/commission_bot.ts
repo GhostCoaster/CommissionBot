@@ -1,8 +1,9 @@
+
 import * as Discord from 'discord.js'
 import * as Login from './login'
 import * as Commmand from './command'
 import * as CommissionsList from './commissions/commissionsList'
-import * as RoleManager from './roleManager'
+import * as RoleManager from './role/roleManager'
 import { Commissions } from './commissions/commissions'
 import { brotliCompressSync } from 'zlib';
 import * as Util from './util';
@@ -18,8 +19,9 @@ bot.on('ready', () => {
 	
 	/* setup roles in all guilds */
 	bot.guilds.cache.forEach(guild => {
-		RoleManager.init(guild);
-		RoleManager.purge(guild);
+		RoleManager.init(guild).then(() => {
+			RoleManager.purge(guild);
+		}).catch(err => console.log(err));
 	});
 
 	MainMessage.init();
@@ -27,23 +29,20 @@ bot.on('ready', () => {
 
 Commmand.addGlobalCommand('commiss', message => {
 	/* only admins can start it */
-	if (!message.member) return;
 	if (!Util.isAdmin(message.member)) return;
 	
-	let errMessage = CommissionsList.addCommissions(message.author, message.channel);
+	let errMessage = CommissionsList.addCommissions(message.member, message.channel);
 	if (errMessage) message.channel.send(errMessage);
 });
 
 Commmand.addGlobalCommand('stop', message => {
-	if (message.guild === null) return;
-	if (message.channel.type !== 'text') return;
-
 	let index = CommissionsList.findCommissions(message.channel);
 	if (index === -1) return void message.channel.send('No commissions going on in this channel!');
 
 	/* only the game master can stop it */
 	let commissions = CommissionsList.activeCommissions[index];
-	if (!commissions.isGameMaster(message.author)) return;
+
+	if (!commissions.isAdmin(message.member)) return;
 
 	CommissionsList.activeCommissions[index].stop();
 
@@ -51,9 +50,6 @@ Commmand.addGlobalCommand('stop', message => {
 });
 
 Commmand.addGlobalCommand('time', message => {
-	if (message.guild === null) return;
-	if (message.channel.type !== 'text') return;
-
 	let index = CommissionsList.findCommissions(message.channel);
 	if (index === -1) return void message.channel.send('No commissions going on in this channel!');
 	let commissions = CommissionsList.activeCommissions[index];
