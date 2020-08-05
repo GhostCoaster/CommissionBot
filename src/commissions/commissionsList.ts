@@ -7,7 +7,7 @@ export const activeCommissions = Array<Commissions>();
 /**
  * @returns a string if there was an error adding this commissions
  */
-export let addCommissions = (member: Discord.GuildMember, channel: Discord.TextChannel | Discord.DMChannel | Discord.NewsChannel): string | undefined => {
+export let addCommissions = (member: Discord.GuildMember, channel: Discord.TextChannel | Discord.DMChannel | Discord.NewsChannel, ranked: boolean): string | undefined => {
 	if (channel.type !== 'text') return 'Can\'t make a commissions in this channel!';
 
 	let available = activeCommissions.every(commissions => {
@@ -15,7 +15,7 @@ export let addCommissions = (member: Discord.GuildMember, channel: Discord.TextC
 	});
 
 	if (available) {
-		activeCommissions.push(new Commissions(member, channel));
+		activeCommissions.push(new Commissions(member, channel, ranked));
 
 		return undefined;
 	} else {

@@ -1,8 +1,8 @@
 
 import { Round } from "./round";
 import { updateMessage } from "../commissions/mainMessage";
-import { addAnyCommand, addCommand, removeCommand, removeAnyCommand } from '../command';
-import { User, ReactionUserManager, GuildMember } from "discord.js";
+import { addAnyCommand, addCommand, removeCommand, removeAnyCommand, addDelete, removeDelete } from '../command';
+import { User, ReactionUserManager, GuildMember, Message, MessageAttachment } from "discord.js";
 
 export class ReferenceRound extends Round {
 	originalIndex = 0;
@@ -37,11 +37,14 @@ export class ReferenceRound extends Round {
 		addAnyCommand(this.commissions.channel, message => {
 			if (!this.commissions.isCurrentPlayer(message.member)) return;
 
+			const attachment = message.attachments.first();
+
 			/* could potentially put an actual image check here */
-			if (message.attachments.size === 0) {
-				this.commissions.channel.send('Please attach an image!');
-				return;
-			}
+			if (!attachment)
+				return void this.commissions.channel.send('Please attach an image!');
+
+			this.commissions.referenceMessage = message;
+			const imageURL = attachment.url;
 
 			this.commissions.cycleCurrentPlayer();
 			this.commissions.nextRound();

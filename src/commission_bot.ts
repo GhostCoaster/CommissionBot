@@ -34,7 +34,15 @@ Commmand.addGlobalCommand('commiss', message => {
 	/* only admins can start it */
 	if (!Util.isAdmin(message.member)) return;
 	
-	let errMessage = CommissionsList.addCommissions(message.member, message.channel);
+	let errMessage = CommissionsList.addCommissions(message.member, message.channel, true);
+	if (errMessage) message.channel.send(errMessage);
+});
+
+Commmand.addGlobalCommand('casual', message => {
+	/* only admins can start it */
+	if (!Util.isAdmin(message.member)) return;
+	
+	let errMessage = CommissionsList.addCommissions(message.member, message.channel, false);
 	if (errMessage) message.channel.send(errMessage);
 });
 
@@ -134,6 +142,10 @@ bot.on('messageReactionAdd', (messageReaction, user) => {
 
 bot.on('messageReactionRemove', (messageReaction, user) => {
 	Commmand.handleReactRemove(bot, messageReaction, user);
+});
+
+bot.on('messageDelete', (message) => {
+	Commmand.handleMessageDelete(message);
 });
 
 Login.getToken().then(token => {

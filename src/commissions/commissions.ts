@@ -10,6 +10,7 @@ import { cpus } from 'os';
 import { removeCommissions, findCommissions } from './commissionsList';
 import * as MainMessage from './mainMessage';
 import { Submission } from './submission';
+import { manageChannel } from '../role/channelManager';
 
 /**
  * represents a game of commissions happening
@@ -20,7 +21,8 @@ export class Commissions {
 	guild: Discord.Guild;
 
 	message: undefined | Discord.Message;
-
+	referenceMessage: undefined | Discord.Message;
+	
 	players: Array<Discord.GuildMember>;
 	playerIndex: number;
 
@@ -28,8 +30,9 @@ export class Commissions {
 	drawTime: number;
 
 	submittedDrawings: Array<Submission | undefined>;
-	
-	constructor(gameMaster: Discord.GuildMember, channel: Discord.TextChannel) {
+	ranked: boolean;
+
+	constructor(gameMaster: Discord.GuildMember, channel: Discord.TextChannel, ranked: boolean) {
 		this.gameMaster = gameMaster;
 		this.channel = channel;
 		this.guild = channel.guild;
@@ -42,6 +45,10 @@ export class Commissions {
 
 		this.message = undefined;
 		
+		this.ranked = ranked;
+
+		manageChannel(this.channel);
+
 		this.currentRound = createRound(this, RoundIndex.JOIN);
 		this.currentRound.onStart();
 	}

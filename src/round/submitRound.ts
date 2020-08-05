@@ -3,7 +3,7 @@ import { Round } from './round'
 import { updateMessage, editMessage } from '../commissions/mainMessage';
 import { DiscordAPIError, Message } from 'discord.js';
 import { Timer } from '../timer';
-import { addAnyCommand, removeAnyCommand } from '../command';
+import { addAnyCommand, removeAnyCommand, removeDelete, addDelete } from '../command';
 import * as Util from '../util';
 import { RoundType } from './rounds';
 import { Commissions } from '../commissions/commissions';
@@ -38,10 +38,13 @@ export class SubmitRound extends Round {
 			/* delete old submission from this player if it exists */
 			/* if it doesn't exist then this is the player's first submission */
 			let oldSubmission = this.commissions.submittedDrawings[playerIndex];
-			if (oldSubmission)
+			if (oldSubmission) {
+				removeDelete(oldSubmission.message);
 				oldSubmission.message.delete();
-			else
+			} else {
+				/* the first time submitting a submission */
 				++this.numSubmissions;
+			}
 
 			/* record this as the player's submission */
 			this.commissions.submittedDrawings[playerIndex] = new Submission(message);
@@ -50,6 +53,13 @@ export class SubmitRound extends Round {
 			if (this.numSubmissions === this.commissions.players.length) {
 				this.commissions.nextRound();
 			}
+
+			/* if they revoke submission */
+			addDelete(message, deleted => {
+				--this.numSubmissions;
+
+				this.commissions.submittedDrawings[playerIndex] = undefined;
+			});
 		});
 	}
 	
@@ -57,5 +67,9 @@ export class SubmitRound extends Round {
 		this.timer.stop();
 
 		removeAnyCommand(this.commissions.channel);
+
+		this.commissions.submittedDrawings.forEach(submission => {
+			if (submission) removeDelete(submission.message);
+		});
 	}
 }

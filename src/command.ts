@@ -21,6 +21,10 @@ export interface OnReact {
 	(reaction: Discord.MessageReaction, user: Discord.User): void;
 };
 
+export interface OnDelete {
+	(message: Discord.Message): void;
+}
+
 interface CommandDefinition {
 	channel?: Discord.TextChannel;
 	keyword?: string;
@@ -32,11 +36,17 @@ interface ReactDefinition {
 	onReact: OnReact;
 };
 
+interface DeleteDefinition {
+	message: Discord.Message;
+	onDelete: OnDelete;
+};
+
 const delimiter = '^';
 
 let commands = Array<CommandDefinition>();
 let reactAdds = Array<ReactDefinition>();
 let reactRemoves = Array<ReactDefinition>();
+let deletes = Array<DeleteDefinition>();
 
 /* util */
 let removeFromArray = <T>(array: Array<T>, find: (member: T) => boolean) => {
@@ -45,6 +55,8 @@ let removeFromArray = <T>(array: Array<T>, find: (member: T) => boolean) => {
 
 	array.splice(removeIndex, 1);
 }
+
+/* message sending */
 
 export const addCommand = (channel: Discord.TextChannel, keyword: string, onMessage: OnMessage) => {
 	commands.push({channel, keyword, onMessage});
@@ -91,6 +103,8 @@ export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
 	});
 }
 
+/* message reactions */
+
 export let addReactAdd = (message: Discord.Message, onAdd: OnReact) => {
 	reactAdds.push({message: message, onReact: onAdd});
 }
@@ -133,4 +147,26 @@ export let handleReactRemove = (bot: Discord.Client, messageReaction: Discord.Me
 
 		return true;
 	});
+}
+
+/* message deleting */
+
+export const addDelete = (message: Discord.Message, onDelete: OnDelete) => {
+	deletes.push({ message, onDelete });
+}
+
+export const removeDelete = (message: Discord.Message) => {
+	removeFromArray(deletes, delete_ => delete_.message === message);
+}
+
+export let handleMessageDelete = (message: Discord.Message | Discord.PartialMessage) => {
+	deletes.every(delete_ => {
+		if (delete_.message === message) {
+			delete_.onDelete(message);
+
+			return false;
+		}
+
+		return true;
+	})
 }

@@ -2,23 +2,33 @@
 import { Round } from './round';
 import { updateMessage, setReact } from '../commissions/mainMessage';
 import * as Util from '../util';
-import { addReactAdd, addReactRemove, removeReactAdd, removeReactRemove, addCommand, removeCommand } from '../command';
+import { addReactAdd, addReactRemove, removeReactAdd, removeReactRemove, addCommand, removeCommand, addDelete } from '../command';
 import Collection from '@discordjs/collection';
 import * as Discord from 'discord.js';
 import { Timer } from '../timer';
 
 export class VoteRound extends Round {
 	onStart(): void {
-		/* don't do anything if there were no submissions */
-		/* or if there was only 1 (which will be the winner) */
-		let numSubmissions = 0;
+		const checkForceEnd = () => {
+			/* don't do anything if there were no submissions */
+			/* or if there was only 1 (which will be the winner) */
+			let numSubmissions = 0;
 
-		this.commissions.submittedDrawings.forEach(submission => {
-			if (submission !== undefined) ++numSubmissions;
-		})
+			this.commissions.submittedDrawings.forEach(submission => {
+				if (submission !== undefined) ++numSubmissions;
+			})
 
-		if (numSubmissions < 2) return void this.commissions.nextRound();
+			if (numSubmissions < 2) {
+				this.timer.stop();
+				return void this.commissions.nextRound();
+			}
+		}
 		
+		checkForceEnd();
+
+		/* no voting in casual mode */
+		if (!this.commissions.ranked) return void this.commissions.nextRound();
+
 		/* actually set up voting round */
 		this.timer = new Timer(60, 5, secondsLeft => {
 			this.commissions.editMessage({ description: Util.timeDescription(secondsLeft) });
@@ -46,7 +56,7 @@ export class VoteRound extends Round {
 			this.commissions.nextRound();
 		});
 
-		this.commissions.submittedDrawings.forEach(submission => {
+		this.commissions.submittedDrawings.forEach((submission, index) => {
 			/* if this player actually submitted */
 			if (!submission) return;
 
@@ -95,6 +105,16 @@ export class VoteRound extends Round {
 				} else if (messageReact.emoji.name === '📥') {
 					++submission.rating;
 				}
+			});
+
+			/* if a player revokes their submission */
+			addDelete(message, deleted => {
+				removeReactAdd(message);
+				removeReactRemove(message);
+
+				this.commissions.submittedDrawings[index] = undefined;
+
+				checkForceEnd();
 			});
 		});
 	}
