@@ -9,6 +9,7 @@ import { brotliCompressSync } from 'zlib';
 import * as Util from './util';
 import { userInfo } from 'os';
 import * as MainMessage from './commissions/mainMessage';
+import * as Storage from './storage';
 
 let data = require('../data.json');
 
@@ -17,6 +18,8 @@ const bot = new Discord.Client();
 bot.on('ready', () => {
 	console.log('commissions bot online');
 	
+	Storage.init();
+
 	/* setup roles in all guilds */
 	bot.guilds.cache.forEach(guild => {
 		RoleManager.init(guild).then(() => {
@@ -86,6 +89,28 @@ Commmand.addGlobalCommand('time', message => {
 	commissions.drawTime = totalTime;
 
 	message.channel.send(`Commissions draw time set to ${Util.timeString(totalTime)}`);
+});
+
+Commmand.addGlobalCommand('score', message => {
+	const mentions = message.mentions;
+
+	/* when you just want to see your own score */
+	if (mentions.users.size === 0) {
+		const id = message.author.id;
+		const score = Storage.getScore(id);
+
+		message.channel.send(`<@${id}>, your commissions score is ${score}`);
+
+	/* seeing someone else's score */
+	} else {
+		const user = mentions.users.first();
+		if (!user) return;
+
+		const id = user.id;
+		const score = Storage.getScore(id);
+
+		message.channel.send(`<@${id}>'s commissions score is ${score}`);
+	}
 });
 
 bot.on('message', message => {

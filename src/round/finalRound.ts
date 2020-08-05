@@ -7,6 +7,7 @@ import Collection from '@discordjs/collection';
 import * as Discord from 'discord.js';
 import { Timer } from '../timer';
 import { Submission } from '../commissions/submission';
+import * as Storage from '../storage';
 
 export class FinalRound extends Round {
 	onStart(): void {
@@ -33,18 +34,25 @@ export class FinalRound extends Round {
 				}]
 			});
 		} else {
-			const winningSubmission = contenders[Math.floor(Math.random() * contenders.length)];
+			const winningIndex = Math.floor(Math.random() * contenders.length);
+			const winningSubmission = contenders[winningIndex];
 
 			const winningAttachment = winningSubmission.message.attachments.first();
 			const url = winningAttachment ? winningAttachment.url : '';
 
-			this.commissions.updateMessage({
-				fields: [{
-					name: 'Round Ended',
-					value: `<@${winningSubmission.message.author.id}> has won!`
-				}],
-				image: url
-			});
+			const winner = this.commissions.players[winningIndex];
+			const winnerName = winner.nickname ? winner.nickname : winner.user.username;
+
+			Storage.changeScore(winner.id, 1).then(score => {
+				this.commissions.updateMessage({
+					fields: [{
+						name: 'Round Ended',
+						value: `<@${winner.id}> has won!`
+					}],
+					description: `${winnerName}'s score: ${score}`,
+					image: url
+				});
+			}).catch(err => console.log(err));
 		}
 
 		addCommand(this.commissions.channel, 'next', message => {
