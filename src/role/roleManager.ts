@@ -11,7 +11,7 @@ const roleTemplates = [
 	{ color: 0x2647f1, name: 'ԨՕՏԎҼЯ' }
 ] as RoleTemplate[];
 
-const roleImplementations = [] as Discord.Role[];
+const roleImplementations = new Map<string, Discord.Role[]>();
 
 export enum Roles {
 	COMMISSIONER,
@@ -20,10 +20,17 @@ export enum Roles {
 
 export let init = (guild: Discord.Guild) => {
 	return new Promise((accept, reject) => {
+		const roleArray = [] as Discord.Role[];
+
 		/* only exit the function when all roles have been found */
 		const acceptor = () => {
-			if (roleImplementations.length === roleTemplates.length)
+			if (roleArray.length === roleTemplates.length) {
+
+				/* finally store the roleArray associated with this guild */
+				roleImplementations.set(guild.id, roleArray);
+
 				accept();
+			}
 		};
 	
 		roleTemplates.forEach(roleTemplate => {
@@ -34,8 +41,7 @@ export let init = (guild: Discord.Guild) => {
 	
 			if (foundRole) {
 				if (checkRole(foundRole, roleTemplate)) {
-					console.log('all good!');
-					roleImplementations.push(foundRole);
+					roleArray.push(foundRole);
 
 					acceptor();
 
@@ -43,7 +49,7 @@ export let init = (guild: Discord.Guild) => {
 					foundRole.delete('cleaning up internal roles').catch(err => reject(err));
 	
 					createRole(guild, roleTemplate).then(created => {
-						roleImplementations.push(created);
+						roleArray.push(created);
 
 						acceptor();
 
@@ -52,7 +58,7 @@ export let init = (guild: Discord.Guild) => {
 	
 			} else {
 				createRole(guild, roleTemplate).then(created => {
-					roleImplementations.push(created);
+					roleArray.push(created);
 	
 					acceptor();
 
@@ -62,7 +68,7 @@ export let init = (guild: Discord.Guild) => {
 	});
 }
 
-let checkRole = (role: Discord.Role, roleTemplate: RoleTemplate) => {
+const checkRole = (role: Discord.Role, roleTemplate: RoleTemplate) => {
 	return role.color === roleTemplate.color &&
 		role.hoist === false &&
 		role.mentionable === false &&
@@ -70,7 +76,7 @@ let checkRole = (role: Discord.Role, roleTemplate: RoleTemplate) => {
 		!role.permissions.any(0x7FFFFFFF, true);
 }
 
-let createRole = (guild: Discord.Guild, roleTemplate: RoleTemplate) => {
+const createRole = (guild: Discord.Guild, roleTemplate: RoleTemplate) => {
 	return new Promise<Discord.Role>((accept, reject) => {
 		guild.roles.create({
 			data: {
@@ -85,8 +91,13 @@ let createRole = (guild: Discord.Guild, roleTemplate: RoleTemplate) => {
 	});
 }
 
-export let getRole = (roleType: Roles) => {
-	return roleImplementations[roleType];
+export const getRole = (guild: Discord.Guild | undefined | null, roleType: Roles) => {
+	if (!guild) return;
+	
+	const roleArray = roleImplementations.get(guild.id);
+	if (!roleArray) return;
+
+	return roleArray[roleType];
 }
 
 /**
@@ -98,10 +109,11 @@ export let getRole = (roleType: Roles) => {
  * call per guild
  */
 export let purge = (guild: Discord.Guild) => {
-	const role = Roles.COMMISSIONER;
-
 	guild.members.cache.forEach(member => {
-		if (member.roles.cache.has(getRole(role).id))
-			member.roles.remove(getRole(role));
+		const role = getRole(guild, Roles.COMMISSIONER);
+		if (!role) return;
+
+		if (member.roles.cache.has(role.id))
+			member.roles.remove(role);
 	});
 }

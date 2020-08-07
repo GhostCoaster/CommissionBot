@@ -77,7 +77,10 @@ export class Commissions {
 	playerJoin(member: Discord.GuildMember) {
 		this.players.push(member);
 
-		member.roles.add(getRole(Roles.COMMISSIONER));
+		const role = getRole(this.guild, Roles.COMMISSIONER);
+		if (!role) return;
+
+		member.roles.add(role);
 	}
 
 	playerLeave(member: Discord.GuildMember) {
@@ -86,7 +89,10 @@ export class Commissions {
 
 		this.players.splice(index, 1);
 
-		member.roles.remove(getRole(Roles.COMMISSIONER));
+		const role = getRole(this.guild, Roles.COMMISSIONER);
+		if (!role) return false;
+
+		member.roles.remove(role);
 	}
 
 	/**
@@ -134,9 +140,12 @@ export class Commissions {
 	}
 
 	isAdmin(member: Discord.GuildMember) {
+		const role = getRole(this.guild, Roles.HOSTER);
+		if (!role) return false;
+
 		return member.hasPermission('ADMINISTRATOR')
 			|| member === this.gameMaster
-			|| member.roles.cache.has(getRole(Roles.HOSTER).id);
+			|| member.roles.cache.has(role.id);
 	}
 
 	isPlayer(user: Discord.GuildMember | Discord.User) {
@@ -152,11 +161,11 @@ export class Commissions {
 
 		if (message.member === this.gameMaster) return false;
 		
-		if (!message.member.roles.cache.has(getRole(Roles.COMMISSIONER).id)) {
-			return true;
-		}
+		const role = getRole(message.guild, Roles.COMMISSIONER);
+		if (!role) return false;
 
-		return false;
+		/* discard if not a commissioner */
+		return !message.member.roles.cache.has(role.id);
 	}
 
 	/**

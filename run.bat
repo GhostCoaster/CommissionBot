@@ -1,0 +1,1 @@
+node build/commission_bot.js
