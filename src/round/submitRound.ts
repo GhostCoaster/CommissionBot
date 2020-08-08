@@ -29,6 +29,8 @@ export class SubmitRound extends Round {
 			}]
 		});
 
+		// add a force here */
+		
 		addAnyCommand(this.commissions.channel, message => {
 			if (message.attachments.size == 0) return message.delete();
 

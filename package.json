@@ -5,7 +5,7 @@
 	"main": "build/commission_bot.js",
 	"scripts": {
 		"setup": "mkdir build",
-		"run": "tsc && node build/commission_bot.js"
+		"run": "tsc -t ES2020 && node build/commission_bot.js"
 	},
 	"author": "Gnarwhal, Balduvian",
 	"license": "ISC",

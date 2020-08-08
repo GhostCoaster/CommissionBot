@@ -35,13 +35,20 @@ export class FinalRound extends Round {
 					}]
 				});
 			} else {
+				//DEBUG
+				contenders.forEach(contender => {
+					console.log(`contender: ${contender.message.id} | ${contender.message.author.username}`);
+				});
+				//DEBUG
+
 				const winningIndex = Math.floor(Math.random() * contenders.length);
 				const winningSubmission = contenders[winningIndex];
 	
 				const winningAttachment = winningSubmission.message.attachments.first();
 				const url = winningAttachment ? winningAttachment.url : '';
 	
-				const winner = this.commissions.players[winningIndex];
+				const winner = winningSubmission.message.member;
+				if (!winner) return;
 				const winnerName = winner.nickname ? winner.nickname : winner.user.username;
 	
 				Storage.changeScore(winner.id, 1).then(score => {

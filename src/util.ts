@@ -1,7 +1,11 @@
 import * as discord from "discord.js";
+import { getRole, Roles } from "./role/roleManager";
 
 export let isAdmin = (member: discord.GuildMember) => {
-	return member.permissions.has(0x8);
+	const guild = member.guild;
+	const role = getRole(guild, Roles.HOSTER);
+
+	return (role && member.roles.cache.has(role.id)) || member.permissions.has(0x8);
 }
 
 export let sleep = (millis: number) =>{
@@ -27,4 +31,8 @@ export let timeDescription = (secondsLeft: number) => {
 	let description = `Time left: ${timeString(secondsLeft)}`;
 
 	return `\`\`\`markdown\n${description}\n${'-'.repeat(description.length)}\`\`\``;
+}
+
+export let favoredName = (member: discord.GuildMember) => {
+	return member.nickname ? member.nickname : member.user.username;
 }
