@@ -9,18 +9,18 @@ import { brotliCompressSync } from 'zlib';
 import * as Util from './util';
 import { userInfo } from 'os';
 import * as MainMessage from './commissions/mainMessage';
-import * as Storage from './storage';
-
-let data = require('../data.json');
+import * as Scores from './scores';
 
 const bot = new Discord.Client();
 
 bot.on('ready', () => {
 	console.log('commissions bot online');
 	
-	Storage.init();
+	Scores.init();
 
 	/* setup roles in all guilds */
+	RoleManager.initCustomRoles(bot);
+
 	bot.guilds.cache.forEach(guild => {
 		RoleManager.init(guild).then(() => {
 			RoleManager.purge(guild);
@@ -105,7 +105,7 @@ Commmand.addGlobalCommand('score', message => {
 	/* when you just want to see your own score */
 	if (mentions.users.size === 0) {
 		const id = message.author.id;
-		const score = Storage.getScore(id);
+		const score = Scores.getScore(id);
 
 		message.channel.send(`<@${id}>, your commissions score is ${score}`);
 
@@ -115,10 +115,27 @@ Commmand.addGlobalCommand('score', message => {
 		if (!user) return;
 
 		const id = user.id;
-		const score = Storage.getScore(id);
+		const score = Scores.getScore(id);
 
 		message.channel.send(`<@${id}>'s commissions score is ${score}`);
 	}
+});
+
+Commmand.addGlobalCommand('setCustomRole', message => {
+	if (!Util.isAdmin(message.member)) return;
+
+	const roles = message.mentions.roles;
+	if (roles.size != 1) return void message.channel.send('Please mention 1 role');
+
+	const role = roles.first();
+	/* should never happen */
+	if (!role) return void message.channel.send('Wut');
+
+	RoleManager.addCustomRole(message.guild, role).then(() => {
+		message.channel.send(`<@${role.id}> set to this guild's custom role`);
+	}).catch((err: any) => {
+		message.channel.send(`Something went wrong: ${err}`);
+	});
 });
 
 bot.on('message', message => {

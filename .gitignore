@@ -2,5 +2,7 @@ token.txt
 /node_modules
 /build
 *.js
-data.json
 
+data.json
+customRoles.json
+scores.json

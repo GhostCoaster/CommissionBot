@@ -7,7 +7,7 @@ import Collection from '@discordjs/collection';
 import * as Discord from 'discord.js';
 import { Timer } from '../timer';
 import { Submission } from '../commissions/submission';
-import * as Storage from '../storage';
+import * as Storage from '../scores';
 
 export class FinalRound extends Round {
 	onStart(): void {

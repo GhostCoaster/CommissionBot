@@ -1,10 +1,14 @@
 
 import * as Discord from "discord.js";
+import * as fs from 'fs';
+import { isArray } from "util";
 
 interface RoleTemplate {
 	color: number;
 	name: string;
 };
+
+const customRolesFile = './customRoles.json';
 
 const roleTemplates = [
 	{ color: 0x773ac7, name: 'commiޤޤioner' },
@@ -12,6 +16,7 @@ const roleTemplates = [
 ] as RoleTemplate[];
 
 const roleImplementations = new Map<string, Discord.Role[]>();
+const customRoles = new Map<string, Discord.Role>();
 
 export enum Roles {
 	COMMISSIONER,
@@ -91,6 +96,76 @@ const createRole = (guild: Discord.Guild, roleTemplate: RoleTemplate) => {
 	});
 }
 
+/* custom role managemenmt */
+
+interface CustomRoleStorage {
+	guildID: string,
+	roleID: string
+};
+
+export const initCustomRoles = (bot: Discord.Client) => {
+	return new Promise((accept, reject) => {
+		if (!fs.existsSync(customRolesFile)) {
+			/* we have no custom roles stored so make a storage file */
+			fs.writeFile(customRolesFile, '', err => {
+				if (err) reject(err); else accept();
+			});
+		} else {
+			/* we have a storage file so read from it */
+			fs.readFile(customRolesFile, (err, data) => {
+				if (err) return void reject(err);
+
+				const storage = JSON.parse(data.toString()) as CustomRoleStorage[];
+				/* just ignore incorrectly formatted data */
+				if (!isArray(storage)) return void accept();
+
+				storage.forEach(roleStorage => {
+					const guildID = roleStorage.guildID;
+
+					const guild = bot.guilds.cache.get(guildID);
+					if (!guild) return; /* skip this guild, doesn't exist anymore */
+
+					const role = guild.roles.cache.get(roleStorage.roleID);
+					if (!role) return; /* likewise this role */
+
+					customRoles.set(guildID, role);
+				});
+
+				accept();
+			});
+		}
+	});
+}
+
+const saveCustomRoles = () => {
+	return new Promise((accept, reject) => {
+		/* need to convert the map to an array for saving */
+		const saveArr = [] as CustomRoleStorage[];
+
+		const keys = customRoles.keys();
+		const values = customRoles.values();
+		let key = { done: false, value: '' } as IteratorResult<string>;
+
+		while (!(key = keys.next()).done) {
+			saveArr.push({ guildID: key.value, roleID: values.next().value.id });
+		}
+
+		fs.writeFile(customRolesFile, JSON.stringify(saveArr), err => {
+			if (err) reject(err); else accept();
+		});
+	});
+}
+
+export const addCustomRole = (guild: Discord.Guild, role: Discord.Role) => {
+	return new Promise((accept, reject) => {
+		customRoles.set(guild.id, role);
+
+		saveCustomRoles().then(accept).catch(err => reject(err));
+	});
+}
+
+/* role getters */
+
 export const getRole = (guild: Discord.Guild | undefined | null, roleType: Roles) => {
 	if (!guild) return;
 	
@@ -98,6 +173,12 @@ export const getRole = (guild: Discord.Guild | undefined | null, roleType: Roles
 	if (!roleArray) return;
 
 	return roleArray[roleType];
+}
+
+export const getCustomRole = (guild: Discord.Guild | undefined | null) => {
+	if (!guild) return;
+
+	return customRoles.get(guild.id);	
 }
 
 /**
