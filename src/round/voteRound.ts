@@ -120,7 +120,7 @@ export class VoteRound extends Round {
 			}
 
 			addReactAdd(message, (messageReact, user) => {
-				if (this.commissions.filterReact(messageReact, user)) return;
+				if (this.commissions.filterReact(messageReact, user, true)) return;
 
 				/* upvote */
 				if (messageReact.emoji.name === '📤') {

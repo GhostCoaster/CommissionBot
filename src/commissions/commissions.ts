@@ -174,10 +174,9 @@ export class Commissions {
 	 * 
 	 * @param messsageReaction 
 	 */
-	filterReact(messsageReact: Discord.MessageReaction, user: Discord.User): boolean {
-		if (!this.isPlayer(user)) {
+	filterReact(messsageReact: Discord.MessageReaction, user: Discord.User, selfProhibit: boolean = false): boolean {
+		if (!this.isPlayer(user) || (selfProhibit && messsageReact.message.author === user)) {
 			messsageReact.users.remove(user);
-
 			return true;
 		}
 
