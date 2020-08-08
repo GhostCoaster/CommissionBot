@@ -1,7 +1,7 @@
 
 import { Round } from './round'
 import { updateMessage, editMessage } from '../commissions/mainMessage';
-import { Message } from 'discord.js';
+import { Message, GuildMember } from 'discord.js';
 import { Timer } from '../timer';
 import * as Util from '../util';
 import { RoundType } from './rounds';
@@ -37,5 +37,9 @@ export class DrawRound extends Round {
 		this.timer.stop();
 
 		removeCommand(this.commissions.channel, 'force');
+	}
+
+	onPlayerLeave(member: GuildMember, index: number): void {
+		
 	}
 }

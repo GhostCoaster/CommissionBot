@@ -35,12 +35,6 @@ export class FinalRound extends Round {
 					}]
 				});
 			} else {
-				//DEBUG
-				contenders.forEach(contender => {
-					console.log(`contender: ${contender.message.id} | ${contender.message.author.username}`);
-				});
-				//DEBUG
-
 				const winningIndex = Math.floor(Math.random() * contenders.length);
 				const winningSubmission = contenders[winningIndex];
 	
@@ -56,6 +50,9 @@ export class FinalRound extends Round {
 						fields: [{
 							name: 'Round Ended',
 							value: `<@${winner.id}> has won!`
+						}, {
+							name: 'Waiting for game master to start a new round',
+							value: 'remember to save your drawings!'
 						}],
 						description: `${winnerName}'s score: ${score}`,
 						image: url
@@ -79,5 +76,9 @@ export class FinalRound extends Round {
 
 	onEnd(): void {
 		removeCommand(this.commissions.channel, 'next');
+	}
+
+	onPlayerLeave(member: Discord.GuildMember, index: number) {
+
 	}
 }

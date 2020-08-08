@@ -1,6 +1,7 @@
 import { Round } from './round'
 import { setReact } from '../commissions/mainMessage';
 import { removeReactAdd, removeReactRemove, addCommand, removeCommand, removeDelete } from '../command';
+import * as Discord from 'discord.js';
 
 export class ReadyRound extends Round {
 	numReady = 0;
@@ -53,5 +54,26 @@ export class ReadyRound extends Round {
 		}
 
 		removeCommand(this.commissions.channel, 'force');
+	}
+
+	onPlayerLeave(member: Discord.GuildMember, index: number): void {
+		const message = this.commissions.message;
+		if (!message) return;
+
+		const reactions = message.reactions.cache;
+		const reaction = reactions.first();
+		if (!reaction) return;
+
+		/* if the leaver has already reacted */
+		if (reaction.users.cache.has(member.id)) {
+			/* remove their reaction */
+			reaction.users.remove(member);
+			--this.numReady;
+		}
+
+		/* check placyer removal causes game to start */
+		if (this.numReady === this.commissions.players.length) {
+			this.commissions.nextRound();
+		}
 	}
 }

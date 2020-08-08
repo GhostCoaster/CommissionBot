@@ -49,9 +49,6 @@ export class ReferenceRound extends Round {
 			this.commissions.cycleCurrentPlayer();
 			this.commissions.nextRound();
 		});
-
-		/* now that we know all the players make the submission array */
-		this.commissions.submittedDrawings = new Array(this.commissions.players.length);
 	}
 
 	onEnd(): void {
@@ -66,5 +63,12 @@ export class ReferenceRound extends Round {
 				value: `<@${player.id}> is selecting`
 			}]
 		});
+	}
+
+	onPlayerLeave(member: GuildMember, index: number): void {
+		if (this.commissions.playerIndex === index) {
+			this.commissions.playerIndex = 0;
+			this.updateReferenceMessage(this.commissions.players[this.commissions.playerIndex]);
+		}
 	}
 }

@@ -132,7 +132,7 @@ Commmand.addGlobalCommand('setCustomRole', message => {
 	if (!role) return void message.channel.send('Wut');
 
 	RoleManager.addCustomRole(message.guild, role).then(() => {
-		message.channel.send(`<@${role.id}> set to this guild's custom role`);
+		message.channel.send(`<@&${role.id}> set to this guild's custom role`);
 	}).catch((err: any) => {
 		message.channel.send(`Something went wrong: ${err}`);
 	});

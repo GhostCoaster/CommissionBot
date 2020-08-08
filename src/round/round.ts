@@ -1,6 +1,7 @@
 import { Commissions } from "../commissions/commissions";
 import { RoundType, rounds } from "./rounds";
 import { Timer } from "../timer";
+import { GuildMember } from "discord.js";
 
 export abstract class Round {
 	/* default values */
@@ -17,4 +18,6 @@ export abstract class Round {
 	abstract onStart(): void;
 
 	abstract onEnd(): void;
+
+	abstract onPlayerLeave(member: GuildMember, index: number): void;
 }

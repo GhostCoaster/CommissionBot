@@ -1,8 +1,10 @@
+
 import { Round } from './round'
 import { Commissions } from '../commissions/commissions';
 import { RoundType } from './rounds';
 import { updateMessage, setReact } from '../commissions/mainMessage';
 import { removeReactAdd, removeReactRemove, addCommand, removeCommand } from '../command';
+import * as Discord from 'discord.js';
 
 export class JoinRound extends Round {
 	onStart(): void {
@@ -17,7 +19,7 @@ export class JoinRound extends Round {
 				if (member) this.commissions.playerJoin(member);
 			}, (_, user) => {
 				const member = this.commissions.getMember(user);
-				if (member) this.commissions.playerJoin(member);
+				if (member) this.commissions.playerLeave(member);
 			});
 		});
 
@@ -39,5 +41,20 @@ export class JoinRound extends Round {
 		}
 
 		removeCommand(this.commissions.channel, 'start');
+	}
+
+	onPlayerLeave(member: Discord.GuildMember, index: number): void {
+		/* remove the leaver's reaction */
+		const message = this.commissions.message;
+		if (!message) return;
+
+		const reactions = message.reactions.cache;
+		const reaction = reactions.first();
+
+		if (!reaction) return;
+
+		if (reaction.users.cache.has(member.id)) {
+			reaction.users.remove(member);
+		}
 	}
 }

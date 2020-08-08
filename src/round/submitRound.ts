@@ -1,9 +1,9 @@
 
 import { Round } from './round'
 import { updateMessage, editMessage } from '../commissions/mainMessage';
-import { DiscordAPIError, Message } from 'discord.js';
+import { DiscordAPIError, Message, GuildMember } from 'discord.js';
 import { Timer } from '../timer';
-import { addAnyCommand, removeAnyCommand, removeDelete, addDelete } from '../command';
+import { addAnyCommand, removeAnyCommand, removeDelete, addDelete, addCommand, removeCommand } from '../command';
 import * as Util from '../util';
 import { RoundType } from './rounds';
 import { Commissions } from '../commissions/commissions';
@@ -29,8 +29,12 @@ export class SubmitRound extends Round {
 			}]
 		});
 
-		// add a force here */
-		
+		/* if the gamemaster needs to bypass the ready system */
+		addCommand(this.commissions.channel, 'force', message => {
+			if (this.commissions.isAdmin(message.member))
+				this.commissions.nextRound();
+		});
+
 		addAnyCommand(this.commissions.channel, message => {
 			if (message.attachments.size == 0) return message.delete();
 
@@ -69,9 +73,26 @@ export class SubmitRound extends Round {
 		this.timer.stop();
 
 		removeAnyCommand(this.commissions.channel);
+		removeCommand(this.commissions.channel, 'force');
 
 		this.commissions.submittedDrawings.forEach(submission => {
 			if (submission) removeDelete(submission.message);
 		});
+	}
+
+	onPlayerLeave(member: GuildMember, index: number) {
+		const submission = this.commissions.submittedDrawings[index];
+
+		/* if the leaving player submitted */
+		if (submission) {
+			removeDelete(submission.message);
+			submission.message.delete();
+			--this.numSubmissions;
+		}
+
+		/* see if now we can continute */
+		if (this.numSubmissions === this.commissions.players.length) {
+			this.commissions.nextRound();
+		}
 	}
 }

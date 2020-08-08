@@ -9,30 +9,39 @@ import { Timer } from '../timer';
 import { Submission } from '../commissions/submission';
 
 export class VoteRound extends Round {
-	onStart(): void {
-		/**
-		 * ends this round if applicable
-		 * 
-		 * @returns if this round was force ended
-		 */
-		const checkForceEnd = () => {
-			/* don't do anything if there were no submissions */
-			/* or if there was only 1 (which will be the winner) */
-			let numSubmissions = 0;
+	/**
+	 * ends this round if applicable
+	 * 
+	 * @returns if this round was force ended
+	 */
+	checkForceEnd() {
+		/* don't do anything if there were no submissions */
+		/* or if there was only 1 (which will be the winner) */
+		let numSubmissions = 0;
 
-			/* foreach counts all non undefined submissions */
-			this.commissions.submittedDrawings.forEach(() => ++numSubmissions);
+		/* foreach counts all non undefined submissions */
+		this.commissions.submittedDrawings.forEach(() => ++numSubmissions);
 
-			if (numSubmissions < 2) {
-				this.commissions.nextRound();
+		if (numSubmissions < 2) {
+			this.commissions.nextRound();
 
-				return true;
-			}
-
-			return false;
+			return true;
 		}
-		
-		if (checkForceEnd()) return;
+
+		return false;
+	}
+
+	removeSubmission(message: Discord.Message, index: number) {
+		removeReactAdd(message);
+		removeReactRemove(message);
+
+		this.commissions.submittedDrawings[index] = undefined;
+
+		this.checkForceEnd();
+	}
+
+	onStart(): void {
+		if (this.checkForceEnd()) return;
 
 		/* no voting in casual mode */
 		if (!this.commissions.ranked) return void this.commissions.nextRound();
@@ -148,12 +157,7 @@ export class VoteRound extends Round {
 
 			/* if a player revokes their submission */
 			addDelete(message, deleted => {
-				removeReactAdd(message);
-				removeReactRemove(message);
-
-				this.commissions.submittedDrawings[index] = undefined;
-
-				checkForceEnd();
+				this.removeSubmission(message, index);
 			});
 		});
 	}
@@ -171,5 +175,14 @@ export class VoteRound extends Round {
 		removeCommand(this.commissions.channel, 'force');
 
 		removeAnyCommand(this.commissions.channel);
+	}
+
+	onPlayerLeave(member: Discord.GuildMember, index: number) {
+		/* delete the leaver's submission if they have one */
+		const submission = this.commissions.submittedDrawings[index];
+		
+		if (submission) {
+			this.removeSubmission(submission.message, index);
+		}
 	}
 }

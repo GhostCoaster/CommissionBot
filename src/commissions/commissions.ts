@@ -11,6 +11,12 @@ import { removeCommissions, findCommissions } from './commissionsList';
 import * as MainMessage from './mainMessage';
 import { Submission } from './submission';
 import { manageChannel } from '../role/channelManager';
+import { addCommand, removeCommand } from '../command';
+
+interface MemberReturn {
+	member: Discord.GuildMember;
+	index: number;
+};
 
 /**
  * represents a game of commissions happening
@@ -49,6 +55,23 @@ export class Commissions {
 
 		manageChannel(this.channel);
 
+		addCommand(this.channel, 'kick', message => {
+			if (!this.isAdmin(message.member)) return;
+
+			const mentions = message.mentions.members;
+			if (!mentions || mentions.size !== 1) return void message.channel.send('mention 1 player');
+
+			const player = mentions.first();
+			if (!player) return;
+
+			const playerIndex = this.players.indexOf(player);
+			if (playerIndex === -1) return void message.channel.send(`<@${player.id}> is not playing`);
+
+			this.playerLeave(player, playerIndex);
+
+			message.channel.send(`<@${player.id}> removed from this commissions`);
+		});
+
 		this.currentRound = createRound(this, RoundIndex.JOIN);
 		this.currentRound.onStart();
 	}
@@ -64,10 +87,15 @@ export class Commissions {
 		/* handle internal resetting */
 		this.currentRound.onEnd();
 
+		const role = getRole(this.guild, Roles.COMMISSIONER);
+		if (!role) return;
+
 		/* un-role all players */
-		while (this.players.length > 0) {
-			this.playerLeave(this.players[0]);
-		}
+		this.players.forEach(player => {
+			player.roles.remove(role);
+		});
+
+		removeCommand(this.channel, 'kick');
 
 		/* handle global commissions removal */
 		let thisIndex = findCommissions(this.channel);
@@ -76,6 +104,7 @@ export class Commissions {
 
 	playerJoin(member: Discord.GuildMember) {
 		this.players.push(member);
+		this.submittedDrawings.push(undefined);
 
 		const role = getRole(this.guild, Roles.COMMISSIONER);
 		if (!role) return;
@@ -83,16 +112,33 @@ export class Commissions {
 		member.roles.add(role);
 	}
 
-	playerLeave(member: Discord.GuildMember) {
-		let index = this.players.indexOf(member);
-		if (index === -1) return;
+	playerLeave(member: Discord.GuildMember, index?: number) {
+		if (!index || index === -1) {
+			index = this.players.indexOf(member);
+			if (index === -1) return;
+		}
+
+		/* custom leaving before actually removing from array */
+		this.currentRound.onPlayerLeave(member, index);
 
 		this.players.splice(index, 1);
+		this.submittedDrawings.splice(index, 1);
 
 		const role = getRole(this.guild, Roles.COMMISSIONER);
-		if (!role) return false;
+		if (!role) return;
 
 		member.roles.remove(role);
+
+		/* put the current player back in good range */
+		this.playerIndex %= this.players.length;
+
+		/* attempt to close this game if not enough people remain */
+		if (this.currentRound.roundType.id !== RoundIndex.JOIN) {
+			if (this.players.length < 2) {
+				this.stop();
+				this.channel.send('Not enough players to keep going, commissions stopped!');
+			}
+		}
 	}
 
 	/**
@@ -125,7 +171,6 @@ export class Commissions {
 	}
 
 	/* UTIL */
-
 	getMember(user: Discord.User) {
 		return this.guild.members.cache.find(member => member.user === user);
 	}
