@@ -132,6 +132,25 @@ Commmand.addGlobalCommand('setHosterRole', message => {
 	});
 });
 
+Commmand.addGlobalCommand('help', message => {
+	message.channel.send(`
+\`\`\`Commands\`\`\`
+**commiss** - Prepare a commissions with scoring
+**casual** - Prepare a commissions without scoring
+**start** - Start the commissions after people have joined
+**stop** - Stop a commissions
+**time [time]** - Set the drawing time for this commissions *(format: 5m2s = 5 minutes 2 seconds)*
+**score** - Displays your own score
+**score [@user]** - Displays the score for this user
+**setHosterRole [@role]** - Sets the special hoster role for this server
+**force** - Move on to the next round immediately
+**skip** - Prevent a player from submitting
+**pass** - Let the next player submit an image
+**list** - Get everyone playing in this commissions
+**kick** - Remove a player from this commissions
+	`);
+});
+
 bot.on('message', message => {
 	Commmand.handleCommand(bot, message);
 

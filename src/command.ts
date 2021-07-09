@@ -84,22 +84,24 @@ export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
 	if (!isGuildMessage(message)) return;
 
 	let text = message.content.toLowerCase();
+	if (!text.startsWith(delimiter)) return;
+	text = text.substring(1);
 
-	commands.every(command => {
+	commands.some(command => {
 		if (
 			(
 				command.channel === undefined ||
 				command.channel === message.channel
 			) && (
 				command.keyword === undefined ||
-				text.startsWith(delimiter + command.keyword)
+				text.startsWith(command.keyword)
 			)
 		) {
 			command.onMessage(message);
-			return false;
+			return true;
 		}
 
-		return true;
+		return false;
 	});
 }
 
