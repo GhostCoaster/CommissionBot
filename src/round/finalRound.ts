@@ -1,11 +1,7 @@
 
 import { Round } from './round';
-import { updateMessage, setReact } from '../commissions/mainMessage';
-import * as Util from '../util';
-import { addReactAdd, addReactRemove, removeReactAdd, removeReactRemove, addCommand, removeCommand } from '../command';
-import Collection from '@discordjs/collection';
+import { addCommand, removeCommand } from '../command';
 import * as Discord from 'discord.js';
-import { Timer } from '../timer';
 import { Submission } from '../commissions/submission';
 import * as Storage from '../scores';
 

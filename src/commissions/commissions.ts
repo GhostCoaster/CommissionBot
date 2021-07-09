@@ -3,15 +3,14 @@ import * as Discord from 'discord.js'
 import { Round } from '../round/round'
 import { rounds, RoundIndex, createRound } from '../round/rounds'
 import { JoinRound } from '../round/joinRound';
-import { Roles, getRole } from '../role/roleManager'
 import * as fs from 'fs'
 import * as https from 'https'
 import { cpus } from 'os';
 import { removeCommissions, findCommissions } from './commissionsList';
 import * as MainMessage from './mainMessage';
 import { Submission } from './submission';
-import { manageChannel } from '../role/channelManager';
 import { addCommand, removeCommand } from '../command';
+import { isAdmin } from '../util';
 
 interface MemberReturn {
 	member: Discord.GuildMember;
@@ -53,8 +52,6 @@ export class Commissions {
 		
 		this.ranked = ranked;
 
-		manageChannel(this.channel);
-
 		addCommand(this.channel, 'kick', message => {
 			if (!this.isAdmin(message.member)) return;
 
@@ -72,6 +69,16 @@ export class Commissions {
 			message.channel.send(`<@${player.id}> removed from this commissions`);
 		});
 
+		addCommand(this.channel, 'list', message => {
+			let str = '```\n'
+
+			this.players.forEach(player => {
+				str += `${player.displayName}\n`
+			});
+
+			message.channel.send(`${str}\`\`\``);
+		});
+
 		this.currentRound = createRound(this, RoundIndex.JOIN);
 		this.currentRound.onStart();
 	}
@@ -87,15 +94,8 @@ export class Commissions {
 		/* handle internal resetting */
 		this.currentRound.onEnd();
 
-		const role = getRole(this.guild, Roles.COMMISSIONER);
-		if (!role) return;
-
-		/* un-role all players */
-		this.players.forEach(player => {
-			player.roles.remove(role);
-		});
-
 		removeCommand(this.channel, 'kick');
+		removeCommand(this.channel, 'list');
 
 		/* handle global commissions removal */
 		let thisIndex = findCommissions(this.channel);
@@ -105,11 +105,6 @@ export class Commissions {
 	playerJoin(member: Discord.GuildMember) {
 		this.players.push(member);
 		this.submittedDrawings.push(undefined);
-
-		const role = getRole(this.guild, Roles.COMMISSIONER);
-		if (!role) return;
-
-		member.roles.add(role);
 	}
 
 	playerLeave(member: Discord.GuildMember, index?: number) {
@@ -123,11 +118,6 @@ export class Commissions {
 
 		this.players.splice(index, 1);
 		this.submittedDrawings.splice(index, 1);
-
-		const role = getRole(this.guild, Roles.COMMISSIONER);
-		if (!role) return;
-
-		member.roles.remove(role);
 
 		/* put the current player back in good range */
 		this.playerIndex %= this.players.length;
@@ -171,6 +161,7 @@ export class Commissions {
 	}
 
 	/* UTIL */
+	
 	getMember(user: Discord.User) {
 		return this.guild.members.cache.find(member => member.user === user);
 	}
@@ -185,12 +176,7 @@ export class Commissions {
 	}
 
 	isAdmin(member: Discord.GuildMember) {
-		const role = getRole(this.guild, Roles.HOSTER);
-		if (!role) return false;
-
-		return member.hasPermission('ADMINISTRATOR')
-			|| member === this.gameMaster
-			|| member.roles.cache.has(role.id);
+		return member === this.gameMaster || isAdmin(member);
 	}
 
 	isPlayer(user: Discord.GuildMember | Discord.User) {
@@ -203,14 +189,9 @@ export class Commissions {
 
 	shouldDiscard(message: Discord.Message): boolean {
 		if (message.member === null) return true;
-
 		if (message.member === this.gameMaster) return false;
 		
-		const role = getRole(message.guild, Roles.COMMISSIONER);
-		if (!role) return false;
-
-		/* discard if not a commissioner */
-		return !message.member.roles.cache.has(role.id);
+		return !this.players.includes(message.member);
 	}
 
 	/**

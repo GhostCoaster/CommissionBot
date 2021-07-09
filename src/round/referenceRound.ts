@@ -1,8 +1,7 @@
 
 import { Round } from "./round";
-import { updateMessage } from "../commissions/mainMessage";
-import { addAnyCommand, addCommand, removeCommand, removeAnyCommand, addDelete, removeDelete } from '../command';
-import { User, ReactionUserManager, GuildMember, Message, MessageAttachment } from "discord.js";
+import { addAnyCommand, addCommand, removeCommand, removeAnyCommand } from '../command';
+import { GuildMember } from "discord.js";
 
 export class ReferenceRound extends Round {
 	originalIndex = 0;
@@ -20,6 +19,7 @@ export class ReferenceRound extends Round {
 			if (this.commissions.playerIndex === this.originalIndex) {
 				this.commissions.channel.send('No one has an image so commissions is ending!');
 				this.commissions.stop();
+				
 			/* or we just need to update the message */
 			} else {
 				this.updateReferenceMessage(this.commissions.players[this.commissions.playerIndex]);
@@ -44,7 +44,6 @@ export class ReferenceRound extends Round {
 				return void this.commissions.channel.send('Please attach an image!');
 
 			this.commissions.referenceMessage = message;
-			const imageURL = attachment.url;
 
 			this.commissions.cycleCurrentPlayer();
 			this.commissions.nextRound();

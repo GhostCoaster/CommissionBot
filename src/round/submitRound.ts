@@ -1,12 +1,9 @@
 
 import { Round } from './round'
-import { updateMessage, editMessage } from '../commissions/mainMessage';
-import { DiscordAPIError, Message, GuildMember } from 'discord.js';
+import { GuildMember } from 'discord.js';
 import { Timer } from '../timer';
 import { addAnyCommand, removeAnyCommand, removeDelete, addDelete, addCommand, removeCommand } from '../command';
 import * as Util from '../util';
-import { RoundType } from './rounds';
-import { Commissions } from '../commissions/commissions';
 import { Submission } from '../commissions/submission';
 
 export class SubmitRound extends Round {

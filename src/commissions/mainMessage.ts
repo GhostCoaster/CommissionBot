@@ -13,7 +13,7 @@ export const init = () => {
 
 export interface EmbedOptions {
 	color?: number;
-	description?: string;
+	description?: string | null;
 	fields?: Discord.EmbedFieldData[];
 	image?: string;
 }

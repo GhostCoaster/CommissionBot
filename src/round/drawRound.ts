@@ -1,11 +1,8 @@
 
 import { Round } from './round'
-import { updateMessage, editMessage } from '../commissions/mainMessage';
-import { Message, GuildMember } from 'discord.js';
+import { GuildMember } from 'discord.js';
 import { Timer } from '../timer';
 import * as Util from '../util';
-import { RoundType } from './rounds';
-import { Commissions } from '../commissions/commissions';
 import { addCommand, removeCommand } from '../command';
 
 export class DrawRound extends Round {

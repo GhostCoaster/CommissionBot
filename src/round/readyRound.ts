@@ -1,6 +1,6 @@
 import { Round } from './round'
 import { setReact } from '../commissions/mainMessage';
-import { removeReactAdd, removeReactRemove, addCommand, removeCommand, removeDelete } from '../command';
+import { removeReactAdd, removeReactRemove, addCommand, removeCommand } from '../command';
 import * as Discord from 'discord.js';
 
 export class ReadyRound extends Round {
@@ -35,7 +35,7 @@ export class ReadyRound extends Round {
 					this.commissions.nextRound();
 				}
 
-			}, (messageReact, user) => {
+			}, () => {
 				--this.numReady;
 			});
 		});
@@ -71,7 +71,7 @@ export class ReadyRound extends Round {
 			--this.numReady;
 		}
 
-		/* check placyer removal causes game to start */
+		/* player removal means all remaining players are ready */
 		if (this.numReady === this.commissions.players.length) {
 			this.commissions.nextRound();
 		}

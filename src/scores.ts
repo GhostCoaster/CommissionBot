@@ -31,7 +31,7 @@ const readData = () => {
 }
 
 const writeData = (scores: PlayerScore[]) => {
-	return new Promise((accept, reject) => {
+	return new Promise<void>((accept, reject) => {
 		fs.writeFile(DATA_PATH, JSON.stringify(scores), err => {
 			if (err) return void reject(err);
 
@@ -47,7 +47,7 @@ const writeData = (scores: PlayerScore[]) => {
  * from a previous session
  */
 export const init = () => {
-	return new Promise((accept, reject) => {
+	return new Promise<void>((accept, reject) => {
 		readData().then(read => {
 			scores = read;
 

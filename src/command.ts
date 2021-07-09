@@ -59,23 +59,23 @@ let removeFromArray = <T>(array: Array<T>, find: (member: T) => boolean) => {
 /* message sending */
 
 export const addCommand = (channel: Discord.TextChannel, keyword: string, onMessage: OnMessage) => {
-	commands.push({channel, keyword, onMessage});
+	commands.push({ channel, keyword: keyword.toLowerCase(), onMessage });
 }
 export const addAnyCommand = (channel: Discord.TextChannel, onMessage: OnMessage) => {
-	commands.push({channel, onMessage});
+	commands.push({ channel, onMessage });
 }
 export const addGlobalCommand = (keyword: string, onMessage: OnMessage) => {
-	commands.push({keyword, onMessage});
+	commands.push({ keyword: keyword.toLowerCase(), onMessage });
 }
 
 export const removeCommand = (channel: Discord.TextChannel | undefined, keyword: string | undefined) => {
-	removeFromArray(commands, command => command.keyword === keyword && command.channel === channel);
+	removeFromArray(commands, command => command.keyword === keyword?.toLowerCase() && command.channel === channel);
 }
 export const removeAnyCommand = (channel: Discord.TextChannel) => {
 	removeFromArray(commands, command => command.channel === channel && !command.keyword);
 }
 export const removeGlobalCommand = (keyword: string) => {
-	removeFromArray(commands, command => command.keyword === keyword && !command.channel);
+	removeFromArray(commands, command => command.keyword === keyword?.toLowerCase() && !command.channel);
 }
 
 export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
@@ -83,7 +83,7 @@ export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
 	if (bot.user && message.author.id === bot.user.id) return;
 	if (!isGuildMessage(message)) return;
 
-	let text = message.content;
+	let text = message.content.toLowerCase();
 
 	commands.every(command => {
 		if (

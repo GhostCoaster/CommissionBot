@@ -1,12 +1,9 @@
 
 import { Round } from './round';
-import { updateMessage, setReact } from '../commissions/mainMessage';
 import * as Util from '../util';
 import { addReactAdd, addReactRemove, removeReactAdd, removeReactRemove, addCommand, removeCommand, addDelete, addAnyCommand, removeAnyCommand } from '../command';
-import Collection from '@discordjs/collection';
 import * as Discord from 'discord.js';
 import { Timer } from '../timer';
-import { Submission } from '../commissions/submission';
 
 export class VoteRound extends Round {
 	/**
@@ -68,15 +65,14 @@ export class VoteRound extends Round {
 		}];
 
 		/* find out who didn't submit */
-		let notSubmitString = '';
-		const submitArray = this.commissions.submittedDrawings;
-		for (let i = 0; i < submitArray.length; ++i) {
-			const submission = this.commissions.submittedDrawings[i];
+		const notSubmitString = this.commissions.submittedDrawings.map((submission, i) => {
+			if (submission !== undefined) {
+				`${this.commissions.players[i].displayName}`
+			} else {
+				undefined
+			}
+		}).filter(str => str !== undefined).join(', ');
 
-			if (!submission) notSubmitString += `${Util.favoredName(this.commissions.players[i])} `;
-		}
-
-		/* if at least one person didn't submit */
 		if (notSubmitString !== '') {
 			embedFields.push({
 				name: 'Did not submit:',

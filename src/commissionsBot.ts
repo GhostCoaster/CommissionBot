@@ -4,10 +4,7 @@ import * as Login from './login'
 import * as Commmand from './command'
 import * as CommissionsList from './commissions/commissionsList'
 import * as RoleManager from './role/roleManager'
-import { Commissions } from './commissions/commissions'
-import { brotliCompressSync } from 'zlib';
 import * as Util from './util';
-import { userInfo } from 'os';
 import * as MainMessage from './commissions/mainMessage';
 import * as Scores from './scores';
 
@@ -18,16 +15,16 @@ bot.on('ready', () => {
 	
 	Scores.init();
 
-	/* setup roles in all guilds */
-	RoleManager.initCustomRoles(bot);
+	Promise.all([
+		RoleManager.loadHosterRoles(bot),
+		Promise.resolve(MainMessage.init())
+	]).then(() => {
+		console.log('setup complete!');
 
-	bot.guilds.cache.forEach(guild => {
-		RoleManager.init(guild).then(() => {
-			RoleManager.purge(guild);
-		}).catch(err => console.log(err));
+	}).catch(err => {
+		console.error('setup failed!');
+		console.error(err);
 	});
-
-	MainMessage.init();
 });
 
 Commmand.addGlobalCommand('commiss', message => {
@@ -121,19 +118,16 @@ Commmand.addGlobalCommand('score', message => {
 	}
 });
 
-Commmand.addGlobalCommand('setCustomRole', message => {
+Commmand.addGlobalCommand('setHosterRole', message => {
 	if (!Util.isAdmin(message.member)) return;
 
 	const roles = message.mentions.roles;
-	if (roles.size != 1) return void message.channel.send('Please mention 1 role');
-
 	const role = roles.first();
-	/* should never happen */
-	if (!role) return void message.channel.send('Wut');
+	if (!role || roles.size != 1) return message.channel.send('Please mention 1 role');
 
-	RoleManager.addCustomRole(message.guild, role).then(() => {
-		message.channel.send(`<@&${role.id}> set to this guild's custom role`);
-	}).catch((err: any) => {
+	RoleManager.assignHosterRole(message.guild.id, role.id).then(() => {
+		message.channel.send(`<@&${role.id}> set to hoster role`);
+	}).catch(err => {
 		message.channel.send(`Something went wrong: ${err}`);
 	});
 });
