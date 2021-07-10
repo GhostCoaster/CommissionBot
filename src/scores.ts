@@ -63,24 +63,24 @@ export const init = () => {
  * @param id id of the user cached in storage associated with a score
  * @param modifier relative offset for score, usually in increments of 1
  * 
- * @returns a promise that resolves when the new data is finished writing to disk
+ * @returns the new score
  */
 export const changeScore = (id: string, modifier: number) => {
 	const score = scores.find(score => score.id === id);
-	let finalScore = modifier;
+	let finalScore: number;
 
 	if (!score) {
 		scores.push({ id: id, score: modifier });
+		finalScore = modifier;
+		
 	} else {
 		score.score += modifier;
 		finalScore = score.score;
 	}
 
-	return new Promise<number>((accept, reject) => {
-		writeData(scores)
-			.then(() => accept(finalScore))
-			.catch(err => reject(err));
-	});
+	writeData(scores);
+
+	return finalScore;
 }
 
 /**

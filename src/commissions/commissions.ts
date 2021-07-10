@@ -171,8 +171,7 @@ export class Commissions {
 	}
 
 	cycleCurrentPlayer() {
-		++this.playerIndex;
-		this.playerIndex %= this.players.length;
+		this.playerIndex = (this.playerIndex + 1) % this.players.length;
 	}
 
 	isAdmin(member: Discord.GuildMember) {

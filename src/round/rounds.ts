@@ -8,7 +8,6 @@ import { ReadyRound } from './readyRound'
 import { DrawRound } from './drawRound'
 import { SubmitRound } from './submitRound'
 import { VoteRound } from './voteRound'
-import { FinalRound } from './finalRound'
 
 export interface RoundType {
 	id?: number;
@@ -22,18 +21,16 @@ export enum RoundIndex {
 	READY,
 	DRAW,
 	SUBMIT,
-	VOTE,
-	FINAL
+	VOTE
 }
 
 export let rounds: RoundType[] = [
-	{create: () => new JoinRound(), next: RoundIndex.REFERENCE},
-	{create: () => new ReferenceRound(), next: RoundIndex.READY},
-	{create: () => new ReadyRound(), next: RoundIndex.DRAW},
-	{create: () => new DrawRound(), next: RoundIndex.SUBMIT},
-	{create: () => new SubmitRound(), next: RoundIndex.VOTE},
-	{create: () => new VoteRound(), next: RoundIndex.FINAL},
-	{create: () => new FinalRound(), next: RoundIndex.REFERENCE}
+	{ create: () => new JoinRound(),      next: RoundIndex.REFERENCE },
+	{ create: () => new ReferenceRound(), next: RoundIndex.READY     },
+	{ create: () => new ReadyRound(),     next: RoundIndex.DRAW      },
+	{ create: () => new DrawRound(),      next: RoundIndex.SUBMIT    },
+	{ create: () => new SubmitRound(),    next: RoundIndex.VOTE      },
+	{ create: () => new VoteRound(),      next: RoundIndex.REFERENCE }
 ];
 
 /* init rounds by setting ids programattically */

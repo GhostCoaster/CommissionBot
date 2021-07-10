@@ -84,8 +84,6 @@ export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
 	if (!isGuildMessage(message)) return;
 
 	let text = message.content.toLowerCase();
-	if (!text.startsWith(delimiter)) return;
-	text = text.substring(1);
 
 	commands.some(command => {
 		if (
@@ -94,7 +92,7 @@ export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
 				command.channel === message.channel
 			) && (
 				command.keyword === undefined ||
-				text.startsWith(command.keyword)
+				text.startsWith(delimiter + command.keyword)
 			)
 		) {
 			command.onMessage(message);

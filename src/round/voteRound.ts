@@ -4,24 +4,15 @@ import * as Util from '../util';
 import { addReactAdd, addReactRemove, removeReactAdd, removeReactRemove, addCommand, removeCommand, addDelete, addAnyCommand, removeAnyCommand } from '../command';
 import * as Discord from 'discord.js';
 import { Timer } from '../timer';
+import { Submission } from '../commissions/submission';
+import { changeScore } from '../scores';
 
 export class VoteRound extends Round {
-	/**
-	 * ends this round if applicable
-	 * 
-	 * @returns if this round was force ended
-	 */
 	checkForceEnd() {
 		/* don't do anything if there were no submissions */
 		/* or if there was only 1 (which will be the winner) */
-		let numSubmissions = 0;
-
-		/* foreach counts all non undefined submissions */
-		this.commissions.submittedDrawings.forEach(() => ++numSubmissions);
-
-		if (numSubmissions < 2) {
+		if (this.commissions.submittedDrawings.filter(el => el !== undefined).length <= 1) {
 			this.commissions.nextRound();
-
 			return true;
 		}
 
@@ -171,9 +162,66 @@ export class VoteRound extends Round {
 		removeCommand(this.commissions.channel, 'force');
 
 		removeAnyCommand(this.commissions.channel);
+
+		/* tell who won */
+
+		if (!this.commissions.ranked) {
+			this.commissions.updateMessage({
+				fields: [{
+					name: 'Round Ended',
+					value: 'Everyone wins! (casual mode)'
+				}]
+			})
+
+		} else if (this.commissions.ranked) {
+			/* determine every message with the highest score */
+			var highestScore = -Infinity;
+			var contenders = [] as Submission[];
+	
+			this.commissions.submittedDrawings.forEach(submission => {
+				if (!submission) return;
+	
+				if (submission.rating > highestScore) {
+					highestScore = submission.rating;
+					contenders = [submission];
+	
+				} else if (submission.rating === highestScore) {
+					contenders.push(submission);
+				}
+			});
+	
+			if (contenders.length === 0) {
+				this.commissions.updateMessage({
+					fields: [{
+						name: 'Round Ended',
+						value: 'No one wins?'
+					}]
+				});
+
+			} else {
+				/* pick a random winner from all the submissions with the highest score */
+				const winningSubmission = contenders[Math.floor(Math.random() * contenders.length)];
+	
+				const url = winningSubmission.message.attachments.first()?.url;
+				const winner = winningSubmission.message.member;
+
+				if (!winner) return;
+		
+				const newScore = changeScore(winner.id, 1);
+				
+				this.commissions.updateMessage({
+					fields: [{
+						name: 'Round Ended',
+						value: `<@${winner.id}> has won!`
+					}],
+					description: `${winner.displayName}'s score: ${newScore}`,
+					image: url
+				});
+			}
+		}
 	}
 
-	onPlayerLeave(member: Discord.GuildMember, index: number) {
+	onPlayerLeave(_: Discord.GuildMember, index: number) {
 		/* delete the leaver's submission if they have one */
 		const submission = this.commissions.submittedDrawings[index];
 		
