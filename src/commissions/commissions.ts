@@ -1,16 +1,14 @@
 
 import * as Discord from 'discord.js'
 import { Round } from '../round/round'
-import { rounds, RoundIndex, createRound } from '../round/rounds'
-import { JoinRound } from '../round/joinRound';
 import * as fs from 'fs'
-import * as https from 'https'
-import { cpus } from 'os';
 import { removeCommissions, findCommissions } from './commissionsList';
 import * as MainMessage from './mainMessage';
 import { Submission } from './submission';
-import { addCommand, removeCommand } from '../command';
-import { isAdmin } from '../util';
+import { CommandDefinition } from '../command';
+import { isAdmin, timeString } from '../util';
+import * as https from 'https';
+import { createRound, RoundIndex } from '../round/rounds';
 
 interface MemberReturn {
 	member: Discord.GuildMember;
@@ -28,14 +26,85 @@ export class Commissions {
 	message: undefined | Discord.Message;
 	referenceMessage: undefined | Discord.Message;
 	
-	players: Array<Discord.GuildMember>;
+	players: Discord.GuildMember[];
 	playerIndex: number;
 
 	currentRound: Round;
 	drawTime: number;
 
-	submittedDrawings: Array<Submission | undefined>;
+	submittedDrawings: (Submission | undefined)[];
 	ranked: boolean;
+
+	commands: CommandDefinition[] = [
+		{
+			keyword: 'kick',
+			onMessage: message => {
+				if (!this.isAdmin(message.member)) return;
+
+				const mentions = message.mentions.members;
+				if (!mentions || mentions.size !== 1) return void message.channel.send('mention 1 player');
+	
+				const player = mentions.first();
+				if (!player) return;
+	
+				const playerIndex = this.players.indexOf(player);
+				if (playerIndex === -1) return void message.channel.send(`<@${player.id}> is not playing`);
+	
+				this.playerLeave(player, playerIndex);
+	
+				message.channel.send(`<@${player.id}> removed from this commissions`);
+			}
+		},
+		{
+			keyword: 'list',
+			onMessage: message => {
+				let str = '```\n'
+
+				this.players.forEach(player => {
+					str += `${player.displayName}\n`
+				});
+	
+				message.channel.send(`${str}\`\`\``);
+			}
+		},
+		{
+			keyword: 'time',
+			onMessage: message => {
+				let parts = message.content.split(' ');
+				if (parts.length < 2) return void message.channel.send('Need a parameter');
+
+				let totalTime = 0;
+
+				for (let p = 1; p < parts.length; ++p) {
+					let timePart = parts[p];
+					let lastIndex = 0;
+
+					for (let i = 0; i < timePart.length; ++i) {
+						if (timePart.charAt(i) === 's') {
+							let numberStr = timePart.substr(lastIndex, i - lastIndex);
+							totalTime += +numberStr;
+
+							lastIndex = i + 1;
+						} else if (timePart.charAt(i) === 'm') {
+							let numberStr = timePart.substr(lastIndex, i - lastIndex);
+							totalTime += (+numberStr * 60);
+
+							lastIndex = i + 1;
+						}
+					}
+				}
+
+				totalTime = Math.floor(totalTime);
+
+				if (isNaN(totalTime)) return void message.channel.send('Incorrect number format\nTry for example: `5m30s` (5 minutes 30 seconds)');
+				if (totalTime < 1) return void message.channel.send('Time needs to be at least 1 second');
+				
+				this.drawTime = totalTime;
+			
+				message.channel.send(`Commissions draw time set to ${timeString(totalTime)}`);
+			}
+		}
+	];
 
 	constructor(gameMaster: Discord.GuildMember, channel: Discord.TextChannel, ranked: boolean) {
 		this.gameMaster = gameMaster;
@@ -52,50 +121,17 @@ export class Commissions {
 		
 		this.ranked = ranked;
 
-		addCommand(this.channel, 'kick', message => {
-			if (!this.isAdmin(message.member)) return;
-
-			const mentions = message.mentions.members;
-			if (!mentions || mentions.size !== 1) return void message.channel.send('mention 1 player');
-
-			const player = mentions.first();
-			if (!player) return;
-
-			const playerIndex = this.players.indexOf(player);
-			if (playerIndex === -1) return void message.channel.send(`<@${player.id}> is not playing`);
-
-			this.playerLeave(player, playerIndex);
-
-			message.channel.send(`<@${player.id}> removed from this commissions`);
-		});
-
-		addCommand(this.channel, 'list', message => {
-			let str = '```\n'
-
-			this.players.forEach(player => {
-				str += `${player.displayName}\n`
-			});
-
-			message.channel.send(`${str}\`\`\``);
-		});
-
 		this.currentRound = createRound(this, RoundIndex.JOIN);
-		this.currentRound.onStart();
 	}
 
 	nextRound() {
 		this.currentRound.onEnd();
-
 		this.currentRound = createRound(this, this.currentRound.roundType.next);
-		this.currentRound.onStart();
 	}
 
 	stop() {
 		/* handle internal resetting */
 		this.currentRound.onEnd();
-
-		removeCommand(this.channel, 'kick');
-		removeCommand(this.channel, 'list');
 
 		/* handle global commissions removal */
 		let thisIndex = findCommissions(this.channel);
@@ -206,37 +242,5 @@ export class Commissions {
 		}
 
 		return false;
-	}
-
-	/* unfinished */
-	getAttachmentImage(attachment: Discord.MessageAttachment) {
-		return new Promise<Buffer>((accept, reject) => {
-			const options = {
-				port: 80,
-				path: attachment.url,
-				method: 'GET'
-			};
-
-			let request = https.request(options, res => {
-				res.on('data', data => {
-					accept(data);
-				});
-			})
-
-			request.on('error', err => {
-				reject(err);
-			});
-
-			request.end();
-		});
-	}
-
-	/* unfinished */
-	saveImage(name: string, data: Buffer) {
-		if (!fs.existsSync('./data')) {
-			fs.mkdirSync('./data');
-		}
-
-		fs.writeFileSync(`./data/${name}`, data);
 	}
 }

@@ -40,7 +40,10 @@ export let createRound = (commissions: Commissions, index: number) => {
 	let roundType = rounds[index];
 
 	let round = roundType.create();
-	round.inject(roundType, commissions);
+	round.roundType = roundType;
+	round.commissions = commissions;
 
+	round.onStart();
+	
 	return round;
 }

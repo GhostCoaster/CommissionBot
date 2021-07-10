@@ -1,5 +1,7 @@
 
 import * as Discord from 'discord.js'
+import { Commissions } from './commissions/commissions';
+import { activeCommissions } from './commissions/commissionsList';
 
 type GuildMessage = Discord.Message & {
 	guild: Discord.Guild
@@ -25,30 +27,30 @@ export interface OnDelete {
 	(message: Discord.Message): void;
 }
 
-interface CommandDefinition {
-	channel?: Discord.TextChannel;
-	keyword?: string;
+export type CommandDefinition = {
+	keyword: string;
 	onMessage: OnMessage;
 };
 
-interface ReactDefinition {
+export type ReactDefinition = {
 	message: Discord.Message;
 	onReact: OnReact;
 };
 
-interface DeleteDefinition {
+export type DeleteDefinition = {
 	message: Discord.Message;
 	onDelete: OnDelete;
 };
 
 const delimiter = '^';
 
-let commands = Array<CommandDefinition>();
+let globalCommands = Array<CommandDefinition>();
 let reactAdds = Array<ReactDefinition>();
 let reactRemoves = Array<ReactDefinition>();
 let deletes = Array<DeleteDefinition>();
 
 /* util */
+
 let removeFromArray = <T>(array: Array<T>, find: (member: T) => boolean) => {
 	let removeIndex = array.findIndex(find);
 	if (removeIndex === -1) return;
@@ -58,49 +60,63 @@ let removeFromArray = <T>(array: Array<T>, find: (member: T) => boolean) => {
 
 /* message sending */
 
-export const addCommand = (channel: Discord.TextChannel, keyword: string, onMessage: OnMessage) => {
-	commands.push({ channel, keyword: keyword.toLowerCase(), onMessage });
-}
-export const addAnyCommand = (channel: Discord.TextChannel, onMessage: OnMessage) => {
-	commands.push({ channel, onMessage });
-}
 export const addGlobalCommand = (keyword: string, onMessage: OnMessage) => {
-	commands.push({ keyword: keyword.toLowerCase(), onMessage });
+	globalCommands.push({ keyword: keyword.toLowerCase(), onMessage });
 }
 
-export const removeCommand = (channel: Discord.TextChannel | undefined, keyword: string | undefined) => {
-	removeFromArray(commands, command => command.keyword === keyword?.toLowerCase() && command.channel === channel);
-}
-export const removeAnyCommand = (channel: Discord.TextChannel) => {
-	removeFromArray(commands, command => command.channel === channel && !command.keyword);
-}
 export const removeGlobalCommand = (keyword: string) => {
-	removeFromArray(commands, command => command.keyword === keyword?.toLowerCase() && !command.channel);
+	removeFromArray(globalCommands, command => command.keyword === keyword?.toLowerCase());
 }
 
-export let handleCommand = (bot: Discord.Client, message: Discord.Message) => {
+const handleGlobalCommand = (text: string, message: GuildMessage) => {
+	if (!text.startsWith(delimiter)) return false;
+
+	const part = text.substring(1);
+
+	return globalCommands.some(command => {
+		if (part.startsWith(command.keyword)) {
+			command.onMessage(message);
+			return true;
+		} else {
+			return false;
+		}
+	})
+}
+
+const handleRoundCommand = (text: string, message: GuildMessage, commissions: Commissions | undefined) => {
+	if (!commissions) return;
+	if (!text.startsWith(delimiter)) return false;
+
+	const part = text.substring(1);
+
+	return commissions.currentRound.commands.some(command => {
+		if (part.startsWith(command.keyword)) {
+			command.onMessage(message);
+			return true;
+		} else {
+			return false;
+		}
+	})
+}
+
+const handleRoundAnyCommand = (message: GuildMessage, commissions: Commissions | undefined) => {
+	if (commissions) commissions.currentRound.onMessage(message);
+}
+
+export const handleCommand = (bot: Discord.Client, message: Discord.Message) => {
 	/* bot will not respond to own message */
 	if (bot.user && message.author.id === bot.user.id) return;
 	if (!isGuildMessage(message)) return;
 
 	let text = message.content.toLowerCase();
 
-	commands.some(command => {
-		if (
-			(
-				command.channel === undefined ||
-				command.channel === message.channel
-			) && (
-				command.keyword === undefined ||
-				text.startsWith(delimiter + command.keyword)
-			)
-		) {
-			command.onMessage(message);
-			return true;
-		}
-
-		return false;
+	const commissions = activeCommissions.find(commissions => {
+		commissions.channel === message.channel
 	});
+
+	if (!handleGlobalCommand(text, message) && !handleRoundCommand(text, message, commissions)) {
+		handleRoundAnyCommand(message, commissions);
+	}
 }
 
 /* message reactions */

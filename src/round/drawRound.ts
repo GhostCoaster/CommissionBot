@@ -1,11 +1,25 @@
 
 import { Round } from './round'
-import { GuildMember } from 'discord.js';
+import { GuildMember, Message } from 'discord.js';
 import { Timer } from '../timer';
 import * as Util from '../util';
-import { addCommand, removeCommand } from '../command';
 
 export class DrawRound extends Round {
+	constructor() {
+		super([
+			{
+				keyword: 'force',
+				onMessage: message => {
+					if (this.commissions.isAdmin(message.member)) {
+						this.commissions.nextRound();
+					}
+				}
+			}
+		]);
+	}
+
+	onMessage(): void {}
+
 	onStart(): void {
 		this.timer = new Timer(this.commissions.drawTime, 5, secondsLeft => {
 			this.commissions.editMessage({ description: Util.timeDescription(secondsLeft) });
@@ -22,21 +36,11 @@ export class DrawRound extends Round {
 				value: 'Submit after time runs out'
 			}]
 		});
-
-		/* if the gamemaster needs to bypass the ready system */
-		addCommand(this.commissions.channel, 'force', message => {
-			if (this.commissions.isAdmin(message.member))
-				this.commissions.nextRound();
-		});
 	}
 	
 	onEnd(): void {
 		this.timer.stop();
-
-		removeCommand(this.commissions.channel, 'force');
 	}
 
-	onPlayerLeave(member: GuildMember, index: number): void {
-		
-	}
+	onPlayerLeave(): void {}
 }

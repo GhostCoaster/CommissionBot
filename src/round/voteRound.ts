@@ -7,6 +7,9 @@ import { Timer } from '../timer';
 import { Submission } from '../commissions/submission';
 import { changeScore } from '../scores';
 
+const UPVOTE = '⬆️';
+const DOWNVOTE = '⬇️';
+
 export class VoteRound extends Round {
 	checkForceEnd() {
 		/* don't do anything if there were no submissions */
@@ -46,11 +49,11 @@ export class VoteRound extends Round {
 			name: 'Voting',
 			value: 'The submission with the highest score will win'
 		}, {
-			name: '📤',
+			name: UPVOTE,
 			value: 'upvote',
 			inline: true
 		}, {
-			name: '📥',
+			name: DOWNVOTE,
 			value: 'downvote',
 			inline: true
 		}];
@@ -76,7 +79,7 @@ export class VoteRound extends Round {
 			fields: embedFields
 		});
 
-		addCommand(this.commissions.channel, 'force', message => {
+		addCommand(this.commissions.channel, 'force', () => {
 			this.commissions.nextRound();
 		});
 
@@ -97,20 +100,18 @@ export class VoteRound extends Round {
 
 			const message = submission.message
 
-			message.react('📤');
-			message.react('📥');
+			message.react(UPVOTE);
+			message.react(DOWNVOTE);
 
 			const removeOpposing = (message: Discord.Message, user: Discord.User, emojiName: string, onRemove: () => void) => {
-				message.reactions.cache.every(messageReaction =>
-					messageReaction.emoji.name !== emojiName
-					|| messageReaction.users.cache.every(cacheUser => {
+				message.reactions.cache.some(messageReaction =>
+					messageReaction.emoji.name === emojiName && messageReaction.users.cache.some(cacheUser => {
 						if (cacheUser === user) {
 							messageReaction.users.remove(user);
 							onRemove();
-							return false;
+							return true;
 						}
-
-						return true;
+						return false;
 					})
 				);
 			}
@@ -119,20 +120,20 @@ export class VoteRound extends Round {
 				if (this.commissions.filterReact(messageReact, user, true)) return;
 
 				/* upvote */
-				if (messageReact.emoji.name === '📤') {
+				if (messageReact.emoji.name === UPVOTE) {
 					++submission.rating;
 
-					removeOpposing(message, user, '📥', () => ++submission.rating)
+					removeOpposing(message, user, DOWNVOTE, () => ++submission.rating)
 
 				/* downvote */
-				} else if (messageReact.emoji.name === '📥') {
+				} else if (messageReact.emoji.name === DOWNVOTE) {
 					--submission.rating;
 
-					removeOpposing(message, user, '📤', () => --submission.rating)
+					removeOpposing(message, user, UPVOTE, () => --submission.rating)
 				}
 			});
 
-			addReactRemove(message, (messageReact, user) => {
+			addReactRemove(message, messageReact => {
 				/* upvote */
 				if (messageReact.emoji.name === '📤') {
 					--submission.rating;
@@ -143,7 +144,7 @@ export class VoteRound extends Round {
 			});
 
 			/* if a player revokes their submission */
-			addDelete(message, deleted => {
+			addDelete(message, () => {
 				this.removeSubmission(message, index);
 			});
 		});
