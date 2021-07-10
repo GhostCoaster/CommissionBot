@@ -1,6 +1,5 @@
 
 import { Round } from './round'
-import { GuildMember, Message } from 'discord.js';
 import { Timer } from '../timer';
 import * as Util from '../util';
 

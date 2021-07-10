@@ -19,7 +19,7 @@ export let addCommissions = (member: Discord.GuildMember, channel: Discord.TextC
 
 		return undefined;
 	} else {
-		return 'A commissions is already happening in this server!';
+		return 'A commissions is already happening in this channel!';
 	}
 }
 

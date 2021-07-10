@@ -1,6 +1,7 @@
 
 import * as Discord from 'discord.js'
 import { OnReact, addReactAdd, addReactRemove } from '../command'
+import { timeDescription } from '../util';
 
 let attachment: Discord.MessageAttachment;
 
@@ -60,9 +61,14 @@ export const updateMessage = (options: EmbedOptions, channel: Discord.TextChanne
 			if (message.embeds.length > 0) {
 				const oldEmbed = message.embeds[0];
 
+				let oldDescription = oldEmbed.description;
+				if (oldDescription && oldDescription.startsWith('```')) {
+					oldDescription = timeDescription(-1);
+				}
+
 				message.edit(createEmbed({
 					color: INACTIVE_COLOR,
-					description: oldEmbed.description,
+					description: oldDescription,
 					fields: oldEmbed.fields,
 					image: oldEmbed.image ? oldEmbed.image.url : ''
 				}));	

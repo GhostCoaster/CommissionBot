@@ -29,7 +29,11 @@ export const timeString = (time: number) => {
 }
 
 export const timeDescription = (secondsLeft: number) => {
-	const description = `Time left: ${timeString(secondsLeft)}`;
+	const description = secondsLeft === -1 ? `Time left: ${timeString(secondsLeft)}` : 'Complete';
 
 	return `\`\`\`markdown\n${description}\n${'-'.repeat(description.length)}\`\`\``;
+}
+
+export const deleteNotBot = (message: discord.Message) => {
+	if (!message.author.bot) message.delete();
 }

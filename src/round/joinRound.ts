@@ -1,10 +1,29 @@
 
 import { Round } from './round'
 import { setReact } from '../commissions/mainMessage';
-import { removeReactAdd, removeReactRemove, addCommand, removeCommand } from '../command';
+import { removeReactAdd, removeReactRemove } from '../command';
 import * as Discord from 'discord.js';
 
 export class JoinRound extends Round {
+	constructor() {
+		super([
+			{
+				keyword: 'start',
+				onMessage: message => {
+					if (!message.member) return;
+					if (!this.commissions.isAdmin(message.member)) return;
+
+					if (this.commissions.players.length < 2)
+						return void this.commissions.channel.send('Need at least two people to start a commissions!');
+
+					this.commissions.nextRound();
+				}
+			}
+		]);
+	}
+
+	onMessage(): void {}
+
 	onStart(): void {
 		this.commissions.updateMessage({
 			fields: [{
@@ -20,16 +39,6 @@ export class JoinRound extends Round {
 				if (member) this.commissions.playerLeave(member);
 			});
 		});
-
-		addCommand(this.commissions.channel, 'start', message => {
-			if (!message.member) return;
-			if (!this.commissions.isAdmin(message.member)) return;
-
-			if (this.commissions.players.length < 2)
-				return void this.commissions.channel.send('Need at least two people to start a commissions!');
-
-			this.commissions.nextRound();
-		});
 	}
 
 	onEnd(): void {
@@ -37,11 +46,9 @@ export class JoinRound extends Round {
 			removeReactAdd(this.commissions.message)
 			removeReactRemove(this.commissions.message)
 		}
-
-		removeCommand(this.commissions.channel, 'start');
 	}
 
-	onPlayerLeave(member: Discord.GuildMember, index: number): void {
+	onPlayerLeave(member: Discord.GuildMember): void {
 		/* remove the leaver's reaction */
 		const message = this.commissions.message;
 		if (!message) return;
@@ -51,8 +58,6 @@ export class JoinRound extends Round {
 
 		if (!reaction) return;
 
-		if (reaction.users.cache.has(member.id)) {
-			reaction.users.remove(member);
-		}
+		reaction.users.remove(member);
 	}
 }

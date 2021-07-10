@@ -224,6 +224,7 @@ export class Commissions {
 
 	shouldDiscard(message: Discord.Message): boolean {
 		if (message.member === null) return true;
+		if (message.member.user.bot) return false;
 		if (message.member === this.gameMaster) return false;
 		
 		return !this.players.includes(message.member);

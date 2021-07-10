@@ -1,7 +1,7 @@
 
 import { Round } from './round';
 import * as Util from '../util';
-import { addReactAdd, addReactRemove, removeReactAdd, removeReactRemove, addCommand, removeCommand, addDelete, addAnyCommand, removeAnyCommand } from '../command';
+import { addReactAdd, addReactRemove, removeReactAdd, removeReactRemove, addDelete, GuildMessage } from '../command';
 import * as Discord from 'discord.js';
 import { Timer } from '../timer';
 import { Submission } from '../commissions/submission';
@@ -11,6 +11,30 @@ const UPVOTE = '⬆️';
 const DOWNVOTE = '⬇️';
 
 export class VoteRound extends Round {
+	constructor() {
+		super([
+			{
+				keyword: 'force',
+				onMessage: message => {
+					if (this.commissions.isAdmin(message.member)) {
+						this.commissions.nextRound();
+					}
+				}
+			}
+		]);
+	}
+
+	onMessage(message: GuildMessage): void {
+		const member = message.member;
+		const playerIndex = this.commissions.players.indexOf(member);
+
+		/* don't allow non submitted players to speak */
+		/* or mainly to try and submit */
+		if (playerIndex === -1 || !this.commissions.submittedDrawings[playerIndex]) {
+			return Util.deleteNotBot(message)
+		}
+	}
+
 	checkForceEnd() {
 		/* don't do anything if there were no submissions */
 		/* or if there was only 1 (which will be the winner) */
@@ -79,22 +103,6 @@ export class VoteRound extends Round {
 			fields: embedFields
 		});
 
-		addCommand(this.commissions.channel, 'force', () => {
-			this.commissions.nextRound();
-		});
-
-		addAnyCommand(this.commissions.channel, message => {
-			const member = message.member;
-			const playerIndex = this.commissions.players.indexOf(member);
-
-			if (playerIndex === -1) return void message.delete();
-
-			/* don't allow non submitted players to speak */
-			/* or mainly to try and submit */
-			if (!this.commissions.submittedDrawings[playerIndex])
-				return void message.delete();
-		});
-
 		this.commissions.submittedDrawings.forEach((submission, index) => {
 			if (!submission) return;
 
@@ -159,10 +167,6 @@ export class VoteRound extends Round {
 			removeReactAdd(submission.message);
 			removeReactRemove(submission.message);
 		});
-
-		removeCommand(this.commissions.channel, 'force');
-
-		removeAnyCommand(this.commissions.channel);
 
 		/* tell who won */
 

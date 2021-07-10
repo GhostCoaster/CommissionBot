@@ -3,7 +3,7 @@ import * as Discord from 'discord.js'
 import { Commissions } from './commissions/commissions';
 import { activeCommissions } from './commissions/commissionsList';
 
-type GuildMessage = Discord.Message & {
+export type GuildMessage = Discord.Message & {
 	guild: Discord.Guild
 	member: Discord.GuildMember
 	channel: Discord.TextChannel
@@ -42,7 +42,7 @@ export type DeleteDefinition = {
 	onDelete: OnDelete;
 };
 
-const delimiter = '^';
+const prefix = '^';
 
 let globalCommands = Array<CommandDefinition>();
 let reactAdds = Array<ReactDefinition>();
@@ -58,7 +58,7 @@ let removeFromArray = <T>(array: Array<T>, find: (member: T) => boolean) => {
 	array.splice(removeIndex, 1);
 }
 
-/* message sending */
+/* commands that trigger when a message is sent */
 
 export const addGlobalCommand = (keyword: string, onMessage: OnMessage) => {
 	globalCommands.push({ keyword: keyword.toLowerCase(), onMessage });
@@ -68,12 +68,8 @@ export const removeGlobalCommand = (keyword: string) => {
 	removeFromArray(globalCommands, command => command.keyword === keyword?.toLowerCase());
 }
 
-const handleGlobalCommand = (text: string, message: GuildMessage) => {
-	if (!text.startsWith(delimiter)) return false;
-
-	const part = text.substring(1);
-
-	return globalCommands.some(command => {
+const handleCommandPart = (commands: CommandDefinition[], part: string, message: GuildMessage) => {
+	return commands.some(command => {
 		if (part.startsWith(command.keyword)) {
 			command.onMessage(message);
 			return true;
@@ -81,26 +77,6 @@ const handleGlobalCommand = (text: string, message: GuildMessage) => {
 			return false;
 		}
 	})
-}
-
-const handleRoundCommand = (text: string, message: GuildMessage, commissions: Commissions | undefined) => {
-	if (!commissions) return;
-	if (!text.startsWith(delimiter)) return false;
-
-	const part = text.substring(1);
-
-	return commissions.currentRound.commands.some(command => {
-		if (part.startsWith(command.keyword)) {
-			command.onMessage(message);
-			return true;
-		} else {
-			return false;
-		}
-	})
-}
-
-const handleRoundAnyCommand = (message: GuildMessage, commissions: Commissions | undefined) => {
-	if (commissions) commissions.currentRound.onMessage(message);
 }
 
 export const handleCommand = (bot: Discord.Client, message: Discord.Message) => {
@@ -110,13 +86,25 @@ export const handleCommand = (bot: Discord.Client, message: Discord.Message) => 
 
 	let text = message.content.toLowerCase();
 
-	const commissions = activeCommissions.find(commissions => {
+	const commissions = activeCommissions.find(commissions =>
 		commissions.channel === message.channel
-	});
+	);
 
-	if (!handleGlobalCommand(text, message) && !handleRoundCommand(text, message, commissions)) {
-		handleRoundAnyCommand(message, commissions);
-	}
+	const part = text.substring(1);
+
+	(
+		text.startsWith(prefix) && (
+			handleCommandPart(globalCommands, part, message) ||
+			(
+				commissions && (
+					handleCommandPart(commissions.commands, part, message) ||
+					handleCommandPart(commissions.currentRound.commands, part, message)
+				)
+			)
+		)
+	) || (
+		commissions && commissions.currentRound.onMessage(message)
+	)
 }
 
 /* message reactions */

@@ -1,8 +1,8 @@
 import { Commissions } from "../commissions/commissions";
 import { RoundType, rounds } from "./rounds";
 import { Timer } from "../timer";
-import { GuildMember, Message } from "discord.js";
-import { CommandDefinition } from "../command";
+import { GuildMember } from "discord.js";
+import { CommandDefinition, GuildMessage } from "../command";
 
 export abstract class Round {
 	/* default values */
@@ -10,13 +10,13 @@ export abstract class Round {
 	roundType: RoundType = rounds[0]
 	commissions: Commissions = null as unknown as Commissions;
 	timer: Timer = new Timer();
-	commands: [CommandDefinition];
+	commands: CommandDefinition[];
 
-	constructor(commands: [CommandDefinition]) {
+	constructor(commands: CommandDefinition[]) {
 		this.commands = commands;
 	}
 
-	abstract onMessage(message: Message): void;
+	abstract onMessage(message: GuildMessage): void;
 
 	abstract onStart(): void;
 	abstract onEnd(): void;

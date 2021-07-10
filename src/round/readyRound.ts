@@ -1,9 +1,24 @@
 import { Round } from './round'
 import { setReact } from '../commissions/mainMessage';
-import { removeReactAdd, removeReactRemove, addCommand, removeCommand } from '../command';
+import { removeReactAdd, removeReactRemove } from '../command';
 import * as Discord from 'discord.js';
 
 export class ReadyRound extends Round {
+	constructor() {
+		super([
+			{
+				keyword: 'force',
+				onMessage: message => {
+					if (this.commissions.isAdmin(message.member)) {
+						this.commissions.nextRound();
+					}
+				}
+			}
+		]);
+	}
+
+	onMessage(): void {}
+
 	numReady = 0;
 
 	onStart(): void {
@@ -39,12 +54,6 @@ export class ReadyRound extends Round {
 				--this.numReady;
 			});
 		});
-
-		/* if the gamemaster needs to bypass the ready system */
-		addCommand(this.commissions.channel, 'force', message => {
-			if (this.commissions.isAdmin(message.member))
-				this.commissions.nextRound();
-		});
 	}
 
 	onEnd(): void {
@@ -52,8 +61,6 @@ export class ReadyRound extends Round {
 			removeReactAdd(this.commissions.message);
 			removeReactRemove(this.commissions.message);
 		}
-
-		removeCommand(this.commissions.channel, 'force');
 	}
 
 	onPlayerLeave(member: Discord.GuildMember, index: number): void {
